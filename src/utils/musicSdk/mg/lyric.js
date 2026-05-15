@@ -75,7 +75,7 @@ const mrcTools = {
   },
   async getMusicInfo(songInfo) {
     return songInfo.mrcUrl == null
-      ? getMusicInfo(songInfo.copyrightId)
+      ? getMusicInfo(songInfo.songmid)
       : songInfo
   },
   getLyric(songInfo) {
