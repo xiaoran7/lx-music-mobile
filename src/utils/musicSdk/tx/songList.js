@@ -242,7 +242,7 @@ export default {
       list: this.filterListDetail(result.songlist),
       page: 1,
       limit: this.limit_song,
-      total: result.songnum,
+      total: result.total_song_num,
       source: 'tx',
       info: {
         name: dirinfo.title,
