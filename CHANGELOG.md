@@ -6,6 +6,17 @@ Project versioning adheres to [Semantic Versioning](http://semver.org/).
 Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
 Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [Unreleased]
+
+### Added
+
+- Added listening statistics collection, device-bucket CRDT synchronization and statistics-aware backup/restore for this fork.
+
+### Changed
+
+- Synchronized current release configuration and local repository metadata.
+- Disabled automatic update checks in the private fork; upstream release entries below remain historical context.
+
 ## [1.8.4](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.3...v1.8.4) - 2026-05-01
 
 我们很高兴地宣布新项目 Any Listen 的桌面版已发布，目前已支持列表跟随本地文件自动更新、加载并播放WebDAV上的歌曲等功能，更多功能仍在积极开发中，桌面版与Web版将同步更新。
