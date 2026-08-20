@@ -11,7 +11,8 @@ import { initDeeplink } from './deeplink'
 import { setApiSource } from '@/core/apiSource'
 import commonActions from '@/store/common/action'
 import settingState from '@/store/setting/state'
-import { checkUpdate } from '@/core/version'
+// 更新模块已剔除：不再在初始化时自动检查更新
+// import { checkUpdate } from '@/core/version'
 import { bootLog } from '@/utils/bootLog'
 import { cheatTip } from '@/utils/tools'
 
@@ -21,7 +22,8 @@ const handlePushedHomeScreen = async() => {
   if (settingState.setting['common.isAgreePact']) {
     if (isFirstPush) {
       isFirstPush = false
-      void checkUpdate()
+      // 更新模块已剔除：不再自动检查更新（checkUpdate 已被置为无操作）。
+      // void checkUpdate()
       void initDeeplink()
     }
   } else {
