@@ -20,6 +20,11 @@ export const hideModal = (componentId: string) => {
 }
 
 export const checkUpdate = async() => {
+  // 更新模块已剔除：本应用为自建分支，不再向上游检查/提示更新。
+  // 保留前后端代码与 UI（版本设置页仍可打开），仅让检查逻辑直接标记为「已是最新」，不发起网络请求、不弹更新框。
+  versionActions.setVersionInfo({ status: 'idle', isLatest: true, isUnknown: false })
+  return
+  // eslint-disable-next-line no-unreachable
   versionActions.setVersionInfo({ status: 'checking' })
   let versionInfo: InitState['versionInfo'] = { ...versionState.versionInfo }
   try {
