@@ -14,6 +14,7 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Changed
 
+- Replaced the upstream-only README with a fork entrypoint covering local startup, static checks, Android/device evidence, statistics compatibility, repository/remotes and retained license restrictions (2026-09-09 documentation governance).
 - Synchronized current release configuration and local repository metadata.
 - Disabled automatic update checks in the private fork; upstream release entries below remain historical context.
 
