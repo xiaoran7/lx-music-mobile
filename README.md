@@ -2,7 +2,7 @@
 
 React Native Android 客户端的本地二开仓。当前 fork 在上游基础上加入听歌统计、按设备分桶的 statistics 同步和统计备份恢复，并停用私有分支自动更新。版本与脚本以 `package.json` 为准；上游发行说明不代表本 fork 已发布。
 
-本机家族入口：`D:\ClaudeSpace\Project\lx-music\docx\README.md`。`gitea` 保存当前 fork，`fork` 是既有 GitHub 分支，`origin` 仅作上游基线；跨仓修改不得从父目录批量暂存。
+本机家族入口：[家族文档](../docx/README.md)。`gitea` 保存当前 fork，`fork` 是既有 GitHub 分支，`origin` 仅作上游基线；跨仓修改不得从父目录批量暂存。
 
 ## 开发与验证
 
