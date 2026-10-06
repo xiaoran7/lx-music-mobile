@@ -29,7 +29,22 @@ declare global {
       /**
        * 歌曲分享方式
        */
-      'common.shareType': 'system' | 'clipboard'
+      'common.shareType': 'system' | 'clipboard' | 'custom_server'
+
+      /**
+       * 自建分享服务地址
+       */
+      'common.shareServerUrl': string
+
+      /**
+       * 自建分享服务 Token（可选）
+       */
+      'common.shareServerToken': string
+
+      /**
+       * 自建分享有效期限（天数，0 表示永久）
+       */
+      'common.shareExpireDays': number
 
       /**
        * 是否同意软件协议
