@@ -1,5 +1,11 @@
 # lx-music-mobile change log
 
+## 2026-10-06 — 初始化 AOCI 认知架构与主分支对齐
+
+- 合并 `feat/statistics-sync` 到本地 `master` 主分支，完成分支收敛。
+- 初始化 AOCI-CODE 全局认知架构基线与 PreToolUse Hook 守护拦截。
+- 配置 `.gitattributes` 与宿主机配置忽略规则（`.mcp.json`、`.claude/settings.json`）。
+
 ## 2026-10-06 — 上游 v1.9.1 合并升级
 
 - 合并官方最新 `v1.9.1`（包含 QRC 纯 JS 解密、tx 搜索及推荐歌单修复、kg/mg 歌词图片修复、歌曲菜单清理缓存等）。
