@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>{{ title ~ ' - ' ~ singer if status == 'valid' else '音乐分享 - TannerLab' }}</title>
+  <meta name="description" content="由 LX Music 分享的专属音乐单页">
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.css">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-light: #60a5fa;
+      --bg: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.94);
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --border: rgba(226, 232, 240, 0.8);
+      --shadow: 0 12px 36px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #38bdf8;
+        --primary-light: #7dd3fc;
+        --bg: #090d16;
+        --card-bg: rgba(18, 24, 38, 0.92);
+        --text-main: #f1f5f9;
+        --text-sub: #94a3b8;
+        --border: rgba(51, 65, 85, 0.6);
+        --shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.4);
+      }
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 16px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    /* 装饰性加速背景层（规避滚动卡顿） */
+    .bg-glow {
+      position: fixed;
+      top: -10vw;
+      right: -10vw;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transform: translateZ(0);
+    }
+    .bg-glow-2 {
+      position: fixed;
+      bottom: -15vw;
+      left: -15vw;
+      width: 70vw;
+      height: 70vw;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transform: translateZ(0);
+    }
+    .container {
+      width: 100%;
+      max-width: 440px;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card {
+      width: 100%;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 22px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+    /* 封面圆盘 */
+    .disc-box {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      position: relative;
+      margin-bottom: 24px;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+      padding: 8px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .disc-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.85);
+      animation: rotate-disc 22s linear infinite;
+      animation-play-state: paused;
+    }
+    .disc-img.playing {
+      animation-play-state: running;
+    }
+    .disc-center {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      background: var(--card-bg);
+      border: 4px solid #1e293b;
+      border-radius: 50%;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    @keyframes rotate-disc {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .song-title {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .song-singer {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .tag-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--primary);
+      background: rgba(59, 130, 246, 0.1);
+      padding: 4px 12px;
+      border-radius: 12px;
+      margin-bottom: 22px;
+      font-weight: 500;
+    }
+    /* APlayer 自适应微调 */
+    #aplayer {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: none;
+      border: 1px solid var(--border);
+      background: transparent;
+      margin-bottom: 8px;
+    }
+    .aplayer .aplayer-info {
+      padding: 12px 14px 0 14px !important;
+    }
+    .aplayer.aplayer-withlrc .aplayer-lrc {
+      margin-top: 10px;
+    }
+    .aplayer .aplayer-lrc p {
+      font-size: 13px;
+      color: var(--text-sub) !important;
+      line-height: 22px !important;
+      height: 22px !important;
+    }
+    .aplayer .aplayer-lrc p.aplayer-lrc-current {
+      color: var(--primary) !important;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    /* 播放引导提示 */
+    .play-tip {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 14px;
+      opacity: 0.85;
+    }
+    /* 错误与失效状态 */
+    .error-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      color: #ef4444;
+    }
+    .error-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+    .error-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+    /* 底部声明 */
+    .footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--text-sub);
+      opacity: 0.65;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="container">
+    {% if status == 'valid' %}
+      <div class="card">
+        <div class="disc-box">
+          <img id="disc-img" class="disc-img" src="{{ cover_url }}" alt="{{ title }}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'1\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><circle cx=\'12\' cy=\'12\' r=\'3\'/></svg>'">
+          <div class="disc-center"></div>
+        </div>
+
+        <h1 class="song-title">{{ title }}</h1>
+        <div class="song-singer">{{ singer }}{{ ' · ' ~ album if album else '' }}</div>
+
+        <div class="tag-bar">
+          <span>🕒 {{ expire_str }}</span>
+        </div>
+
+        <div id="aplayer"></div>
+        <div class="play-tip">点击播放器按钮开始试听，支持歌词随动</div>
+      </div>
+    {% else %}
+      <div class="card">
+        <svg class="error-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div class="error-title">该分享已不可用</div>
+        <div class="error-desc">{{ message }}</div>
+      </div>
+    {% endif %}
+
+    <div class="footer">
+      Powered by LX Music · TannerLab Private Sync
+    </div>
+  </div>
+
+  {% if status == 'valid' %}
+  <script src="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.js"></script>
+  <script>
+    (function() {
+      var discImg = document.getElementById('disc-img');
+      var ap = new APlayer({
+        container: document.getElementById('aplayer'),
+        lrcType: {% if lrc_url %}3{% else %}0{% endif %},
+        theme: '#3b82f6',
+        audio: [{
+          name: {{ title | tojson }},
+          artist: {{ singer | tojson }},
+          url: {{ audio_url | tojson }},
+          cover: {{ cover_url | tojson }},
+          {% if lrc_url %}
+          lrc: {{ lrc_url | tojson }}
+          {% endif %}
+        }]
+      });
+
+      ap.on('play', function() {
+        if (discImg) discImg.classList.add('playing');
+      });
+      ap.on('pause', function() {
+        if (discImg) discImg.classList.remove('playing');
+      });
+      ap.on('ended', function() {
+        if (discImg) discImg.classList.remove('playing');
+      });
+    })();
+  </script>
+  {% endif %}
+</body>
+</html>

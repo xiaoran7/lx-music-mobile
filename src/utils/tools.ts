@@ -334,6 +334,81 @@ export const formatMusicName = (format: string, name: string, singer: string) =>
   return format.replace('歌手', singer).replace('歌名', name)
 }
 
+export const shareToCustomServer = async(musicInfo: LX.Music.MusicInfo) => {
+  toast(global.i18n.t('share_custom_server_loading'))
+  try {
+    const { getMusicUrl, getPicPath, getLyricInfo } = await import('@/core/music')
+    const settingState = (await import('@/store/setting/state')).default
+    const serverUrl = settingState.setting['common.shareServerUrl']?.trim() || 'https://music.tannerlab.cn'
+    const token = settingState.setting['common.shareServerToken']?.trim() || ''
+    const ttlDays = settingState.setting['common.shareExpireDays'] ?? 7
+
+    let audioUrl = ''
+    try {
+      audioUrl = await getMusicUrl({ musicInfo })
+    } catch (e) {
+      console.warn('获取音频直链失败', e)
+    }
+
+    let picUrl = ''
+    try {
+      picUrl = await getPicPath({ musicInfo })
+    } catch (e) {
+      console.warn('获取封面失败', e)
+    }
+
+    let lrc = ''
+    try {
+      const lyricInfo = await getLyricInfo({ musicInfo })
+      lrc = lyricInfo.lyric || ''
+    } catch (e) {
+      console.warn('获取歌词失败', e)
+    }
+
+    const payload = {
+      token,
+      title: musicInfo.name,
+      singer: musicInfo.singer,
+      album: musicInfo.meta?.albumName || '',
+      duration: 0,
+      source: musicInfo.source,
+      songmid: (musicInfo as any).songmid || (musicInfo as any).id || '',
+      audioUrl: audioUrl || null,
+      picUrl: picUrl || null,
+      lrc: lrc || null,
+      ttl_days: ttlDays,
+    }
+
+    const res = await fetch(`${serverUrl.replace(/\/+$/, '')}/api/share`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'X-Share-Token': token } : {}),
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null)
+      throw new Error(errJson?.detail || `HTTP ${res.status}`)
+    }
+
+    const data = await res.json()
+    if (data.code === 0 && data.data?.shareUrl) {
+      clipboardWriteText(data.data.shareUrl)
+      const tip = ttlDays > 0
+        ? global.i18n.t('share_custom_server_success_ttl', { days: ttlDays })
+        : global.i18n.t('share_custom_server_success')
+      toast(tip)
+    } else {
+      throw new Error(data.msg || '未知错误')
+    }
+  } catch (err: any) {
+    console.error('自建分享失败', err)
+    toast(global.i18n.t('share_custom_server_fail', { msg: err.message || String(err) }))
+  }
+}
+
 export const shareMusic = (shareType: LX.ShareType, downloadFileName: LX.AppSetting['download.fileName'], musicInfo: LX.Music.MusicInfo) => {
   const name = musicInfo.name
   const singer = musicInfo.singer
@@ -346,6 +421,9 @@ export const shareMusic = (shareType: LX.ShareType, downloadFileName: LX.AppSett
     case 'clipboard':
       clipboardWriteText(`${musicTitle}${detailUrl ? '\n' + detailUrl : ''}`)
       toast(global.i18n.t('copy_name_tip'))
+      break
+    case 'custom_server':
+      void shareToCustomServer(musicInfo)
       break
   }
 }

@@ -6,7 +6,7 @@ declare namespace LX {
   type Quality = '128k' | '320k' | 'flac' | 'flac24bit' | '192k' | 'ape' | 'wav'
   type QualityList = Partial<Record<LX.Source, LX.Quality[]>>
 
-  type ShareType = 'system' | 'clipboard'
+  type ShareType = 'system' | 'clipboard' | 'custom_server'
 
   type UpdateStatus = 'downloaded' | 'downloading' | 'error' | 'checking' | 'idle'
   interface VersionInfo {

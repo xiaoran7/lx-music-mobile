@@ -1,0 +1,17 @@
+[Unit]
+Description=LX Music Share Web Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/lx-music-share
+ExecStart=/opt/lx-music-share/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8920 --workers 2
+Restart=always
+RestartSec=5
+Environment="BASE_URL=https://music.tannerlab.cn"
+Environment="DEFAULT_TTL_DAYS=7"
+Environment="DATA_DIR=/opt/lx-music-share/data"
+
+[Install]
+WantedBy=multi-user.target
