@@ -1,17 +1,17 @@
 # lx-music-mobile change log
 
+## 2026-10-06 — 上游 v1.9.1 合并升级
+
+- 合并官方最新 `v1.9.1`（包含 QRC 纯 JS 解密、tx 搜索及推荐歌单修复、kg/mg 歌词图片修复、歌曲菜单清理缓存等）。
+- 完整保留本 fork 的听歌统计系统、按设备分桶 CRDT 跨端同步与统计备份恢复能力。
+
 ## 2026-09-26 — 文档核对与精简
 
 - 核对 package 脚本、运行入口及协议文档，统一本仓规则，保留上游 FAQ 与发布历史。
+
 ## 2026-09-26 — 单项目 Agent 入口
 
 - 规则、长期偏好和相关排障经验迁入本项目，agent 不再依赖父目录共享文档。
-
-All notable changes to this project will be documented in this file.
-
-Project versioning adheres to [Semantic Versioning](http://semver.org/).
-Commit convention is based on [Conventional Commits](http://conventionalcommits.org).
-Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 All notable changes to this project will be documented in this file.
 
@@ -30,6 +30,34 @@ Change log format is based on [Keep a Changelog](http://keepachangelog.com/).
 - Replaced the upstream-only README with a fork entrypoint covering local startup, static checks, Android/device evidence, statistics compatibility, repository/remotes and retained license restrictions (2026-09-09 documentation governance).
 - Synchronized current release configuration and local repository metadata.
 - Disabled automatic update checks in the private fork; upstream release entries below remain historical context.
+
+## [1.9.1](https://github.com/lyswhut/lx-music-mobile/compare/v1.9.0...v1.9.1) - 2026-09-19
+
+### 优化
+
+- 优化 tx 推荐歌单列表
+
+### 修复
+
+- 修复打开某些 kg 歌单时歌曲丢失的问题
+
+## [1.9.0](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.4...v1.9.0) - 2026-09-12
+
+### 新增
+
+- 歌曲菜单新增 “清理缓存” 按钮，可用于清理 URL 缓存，当某首歌获取到了错误的歌曲链接时，可以使用该功能清理与其关联的歌曲URL缓存
+
+### 优化
+
+- 优化自动换源歌曲匹配机制
+
+### 修复
+
+- 修复 kg 搜索结果显示问题
+- 修复某些 tx 歌单打开失败的问题 (@ght-000)
+- 修复 mg 图片、歌词获取
+- 修复 tx 歌单翻页问题 (#1107, @jtcai)
+- 修复 tx 歌曲搜索失败的问题（@ikun0014）
 
 ## [1.8.4](https://github.com/lyswhut/lx-music-mobile/compare/v1.8.3...v1.8.4) - 2026-05-01
 
