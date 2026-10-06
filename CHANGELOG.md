@@ -1,5 +1,9 @@
 # lx-music-mobile change log
 
+## 2026-10-07 — 跨端架构与同步协议文档独立收敛
+
+- 引入 `docs/ARCHITECTURE.md`：解耦并独立收敛按设备分桶的 CRDT 听歌统计数据结构、核心合并规则与 WebSocket 握手协议，实现本仓单项目闭环自洽维护。
+
 ## 2026-10-06 — 初始化 AOCI 认知架构与主分支对齐
 
 - 合并 `feat/statistics-sync` 到本地 `master` 主分支，完成分支收敛。
