@@ -324,14 +324,15 @@ async def share_page(code: str, request: Request):
             "album": row["album"] or "",
             "duration": row["duration"] or 0,
             "expire_str": expire_str,
-            "audio_url": f"/media/{code}/audio" if row["has_audio"] else (row["raw_audio_url"] or f"/media/{code}/audio"),
-            "cover_url": f"/media/{code}/cover" if row["has_cover"] else (row["raw_pic_url"] or ""),
-            "lrc_url": f"/media/{code}/lrc" if row["has_lrc"] else "",
+            "audio_url": f"/media/{code}/audio.mp3" if row["has_audio"] else (row["raw_audio_url"] or f"/media/{code}/audio.mp3"),
+            "cover_url": f"/media/{code}/cover.jpg" if row["has_cover"] else (row["raw_pic_url"] or ""),
+            "lrc_url": f"/media/{code}/lyric.lrc" if row["has_lrc"] else "",
         },
     )
 
 
 @app.get("/media/{code}/audio")
+@app.get("/media/{code}/audio.mp3")
 async def get_media_audio(code: str):
     """音频分发保底接口（本地已转存则直接 206 分片直出，未完成则重定向至原始直链）"""
     audio_path = MEDIA_DIR / code / "audio.mp3"
@@ -355,6 +356,7 @@ async def get_media_audio(code: str):
 
 
 @app.get("/media/{code}/cover")
+@app.get("/media/{code}/cover.jpg")
 async def get_media_cover(code: str):
     """封面图片接口（本地不存在时重定向至原始图片地址）"""
     cover_path = MEDIA_DIR / code / "cover.jpg"
@@ -372,6 +374,7 @@ async def get_media_cover(code: str):
 
 
 @app.get("/media/{code}/lrc")
+@app.get("/media/{code}/lyric.lrc")
 async def get_media_lrc(code: str):
     """LRC 歌词接口"""
     lrc_path = MEDIA_DIR / code / "lyric.lrc"

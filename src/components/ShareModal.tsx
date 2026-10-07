@@ -83,25 +83,25 @@ export default forwardRef<ShareModalType, {}>((props, ref) => {
         {musicInfo ? (
           <View style={styles.musicMeta}>
             <Text style={styles.title} numberOfLines={1}>{musicInfo.name}</Text>
-            <Text style={styles.singer} size={12} color={theme['c-font-label']} numberOfLines={1}>
+            <Text style={styles.singer} size={13} color={theme['c-font-label']} numberOfLines={1}>
               {musicInfo.singer}{musicInfo.meta?.albumName ? ` · ${musicInfo.meta.albumName}` : ''}
             </Text>
           </View>
         ) : null}
 
         <View style={styles.section}>
-          <Text size={13} color={theme['c-font-label']}>{t('share_modal_expire_label')}：</Text>
+          <Text size={13} color={theme['c-font-label']} style={styles.sectionLabel}>{t('share_modal_expire_label')}：</Text>
           <View style={styles.expireRow}>
             {expireList.map(({ days, name }) => (
               <CheckBox
                 key={days}
                 check={ttlDays === days}
                 label={name}
-                marginRight={10}
-                marginBottom={4}
+                marginRight={12}
+                marginBottom={6}
                 onChange={() => {
                   setTtlDays(days)
-                  if (shareUrl) setShareUrl('') // 切换天数后需重新生成
+                  if (shareUrl) setShareUrl('') // 切换有效天数后清空旧链接，提示重新生成
                 }}
                 need
               />
@@ -112,19 +112,31 @@ export default forwardRef<ShareModalType, {}>((props, ref) => {
         {shareUrl ? (
           <View style={styles.resultBox}>
             <Text size={12} color={theme['c-font-label']}>{t('share_modal_link_label')}</Text>
-            <TouchableOpacity activeOpacity={0.7} style={[styles.urlBox, { borderColor: theme['c-primary-light-100-alpha-500'], backgroundColor: theme['c-primary-light-900-alpha-200'] }]} onPress={handleCopy}>
-              <Text numberOfLines={2} size={13} color={theme['c-primary-font']}>{shareUrl}</Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={[
+                styles.urlBox,
+                {
+                  borderColor: theme['c-primary-font'],
+                  backgroundColor: 'rgba(0,0,0,0.03)',
+                },
+              ]}
+              onPress={handleCopy}
+            >
+              <Text numberOfLines={2} size={13} color={theme['c-primary-font']} style={{ fontWeight: '600' }}>
+                {shareUrl}
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.btnRow}>
               <Button style={[styles.actionBtn, { backgroundColor: theme['c-primary-font'] }]} onPress={handleCopy}>
-                <Text size={13} color={theme['c-button-font']}>{t('share_modal_copy_btn')}</Text>
+                <Text size={13} color="#ffffff" style={{ fontWeight: 'bold' }}>{t('share_modal_copy_btn')}</Text>
               </Button>
-              <Button style={[styles.actionBtn, { backgroundColor: theme['c-primary-light-200-alpha-700'] }]} onPress={handleSystemShare}>
-                <Text size={13} color={theme['c-primary-font']}>{t('share_modal_system_share_btn')}</Text>
+              <Button style={[styles.actionBtn, { backgroundColor: '#3b82f6' }]} onPress={handleSystemShare}>
+                <Text size={13} color="#ffffff" style={{ fontWeight: 'bold' }}>{t('share_modal_system_share_btn')}</Text>
               </Button>
-              <Button style={[styles.actionBtn, { backgroundColor: theme['c-500'] }]} onPress={handleOpenBrowser}>
-                <Text size={13} color="#fff">{t('share_modal_open_browser')}</Text>
+              <Button style={[styles.actionBtn, { backgroundColor: '#64748b' }]} onPress={handleOpenBrowser}>
+                <Text size={13} color="#ffffff" style={{ fontWeight: 'bold' }}>{t('share_modal_open_browser')}</Text>
               </Button>
             </View>
           </View>
@@ -135,7 +147,7 @@ export default forwardRef<ShareModalType, {}>((props, ref) => {
               disabled={loading}
               onPress={handleGenerate}
             >
-              <Text size={14} color={theme['c-button-font']}>
+              <Text size={15} color="#ffffff" style={{ fontWeight: 'bold' }}>
                 {loading ? t('share_modal_generating') : t('share_modal_generate_btn')}
               </Text>
             </Button>
@@ -150,49 +162,55 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 20,
-    minWidth: 280,
+    paddingBottom: 22,
+    minWidth: 290,
   },
   musicMeta: {
-    marginBottom: 14,
+    marginBottom: 12,
     paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(128,128,128,0.2)',
   },
   title: {
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 17,
     marginBottom: 4,
   },
   singer: {
-    opacity: 0.8,
+    opacity: 0.85,
   },
   section: {
-    marginBottom: 14,
+    marginBottom: 12,
+  },
+  sectionLabel: {
+    marginBottom: 6,
+    fontWeight: '500',
   },
   expireRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 6,
+    marginTop: 2,
   },
   generateBox: {
-    marginTop: 6,
+    marginTop: 10,
   },
   generateBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 6,
+    minHeight: 44,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 2,
   },
   resultBox: {
-    marginTop: 6,
+    marginTop: 4,
   },
   urlBox: {
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    borderWidth: 1.5,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     marginVertical: 10,
   },
   btnRow: {
@@ -202,9 +220,11 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
-    paddingVertical: 8,
+    minHeight: 38,
+    paddingVertical: 9,
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 1,
   },
 })
