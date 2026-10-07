@@ -103,6 +103,16 @@ export const initSetting = async() => {
     }
   }
 
+  // 自动平滑升级：旧版本默认的 shareType 为 system，自动升级至私有云分享服务
+  if (setting) {
+    if (!setting['common.shareType'] || (setting['common.shareType'] as any) === 'system') {
+      setting['common.shareType'] = 'custom_server'
+    }
+    if (!setting['common.shareServerUrl']) {
+      setting['common.shareServerUrl'] = 'https://music.tannerlab.cn'
+    }
+  }
+
   // console.log(setting)
   const updatedSetting = updateSetting(setting, true)
   void saveData(storageDataPrefix.setting, updatedSetting.setting)
