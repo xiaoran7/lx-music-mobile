@@ -6,7 +6,6 @@
   <title>{{ title ~ ' - ' ~ singer if status == 'valid' else '音乐分享 - TannerLab' }}</title>
   <meta name="description" content="由 LX Music 分享的专属音乐单页">
   {% if status == 'valid' %}
-  <!-- OpenGraph 社交卡片（微信、QQ、社交平台优化） -->
   <meta property="og:type" content="music.song">
   <meta property="og:title" content="{{ title }} - {{ singer }}">
   <meta property="og:description" content="由洛雪音乐分享，点击免客户端即可在线试听与互动评价。">
@@ -15,32 +14,37 @@
   <meta name="twitter:title" content="{{ title }} - {{ singer }}">
   <meta name="twitter:image" content="{{ cover_url }}">
   {% endif %}
-  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.css">
   <style>
     :root {
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --primary-light: #60a5fa;
-      --bg: #f8fafc;
-      --card-bg: rgba(255, 255, 255, 0.95);
-      --card-sub-bg: rgba(248, 250, 252, 0.85);
-      --text-main: #0f172a;
-      --text-sub: #64748b;
-      --border: rgba(226, 232, 240, 0.85);
-      --shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.08), 0 4px 16px -2px rgba(15, 23, 42, 0.03);
+      --primary: #07c160;
+      --primary-hover: #06ad56;
+      --primary-light: #e8f8ef;
+      --bg: #ffffff;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-sub: #9ca3af;
+      --text-muted: #6b7280;
+      --border: #f3f4f6;
+      --progress-bg: #e5e7eb;
+      --icon-color: #07c160;
+      --icon-inactive: #9ca3af;
+      --shadow-cover: 0 16px 38px -8px rgba(0, 0, 0, 0.16);
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --primary: #38bdf8;
-        --primary-hover: #0284c7;
-        --primary-light: #7dd3fc;
-        --bg: #090d16;
-        --card-bg: rgba(18, 24, 38, 0.94);
-        --card-sub-bg: rgba(26, 34, 52, 0.7);
-        --text-main: #f1f5f9;
-        --text-sub: #94a3b8;
-        --border: rgba(51, 65, 85, 0.6);
-        --shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.45);
+        --primary: #10b981;
+        --primary-hover: #059669;
+        --primary-light: rgba(16, 185, 129, 0.15);
+        --bg: #111827;
+        --card-bg: #111827;
+        --text-main: #f9fafb;
+        --text-sub: #6b7280;
+        --text-muted: #9ca3af;
+        --border: #1f2937;
+        --progress-bg: #374151;
+        --icon-color: #10b981;
+        --icon-inactive: #6b7280;
+        --shadow-cover: 0 16px 38px -8px rgba(0, 0, 0, 0.45);
       }
     }
     * {
@@ -48,6 +52,7 @@
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -57,604 +62,869 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 48px;
       position: relative;
       overflow-x: hidden;
-      line-height: 1.5;
-    }
-    /* 装饰性加速背景层（规避滚动掉帧） */
-    .bg-glow {
-      position: fixed;
-      top: -12vw;
-      right: -12vw;
-      width: 65vw;
-      height: 65vw;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0) 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      transform: translateZ(0);
-    }
-    .bg-glow-2 {
-      position: fixed;
-      bottom: -15vw;
-      left: -15vw;
-      width: 75vw;
-      height: 75vw;
-      background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0) 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      transform: translateZ(0);
-    }
-    .container {
-      width: 100%;
-      max-width: 480px;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
     }
 
-    /* 主播放器卡片（提升留白与呼吸感） */
-    .card {
+    /* 整体播放器容器（高度自适应手机全屏） */
+    .player-screen {
       width: 100%;
-      background: var(--card-bg);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 32px 24px 26px;
-      box-shadow: var(--shadow);
+      max-width: 480px;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      text-align: center;
+      justify-content: space-between;
+      padding: 16px 20px 24px;
       position: relative;
     }
-    /* 封面圆盘 */
-    .disc-box {
-      width: 170px;
-      height: 170px;
-      border-radius: 50%;
-      position: relative;
-      margin-bottom: 22px;
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
-      padding: 7px;
-      background: linear-gradient(135deg, #1e293b, #0f172a);
+
+    /* 1. 顶部 Header 栏 */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding-top: 8px;
+      padding-bottom: 12px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+      flex: 1;
+    }
+    .back-btn {
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      user-select: none;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .disc-box:active {
-      transform: scale(0.96);
-    }
-    .disc-img {
-      width: 100%;
-      height: 100%;
+      color: var(--text-main);
+      opacity: 0.8;
       border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid rgba(255, 255, 255, 0.88);
-      animation: rotate-disc 22s linear infinite;
-      animation-play-state: paused;
     }
-    .disc-img.playing {
-      animation-play-state: running;
-    }
-    .disc-center {
-      position: absolute;
-      width: 32px;
-      height: 32px;
-      background: var(--card-bg);
-      border: 4px solid #1e293b;
-      border-radius: 50%;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-      pointer-events: none;
-    }
-    @keyframes rotate-disc {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    .song-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     .song-title {
-      font-size: 22px;
+      font-size: 17px;
       font-weight: 700;
       color: var(--text-main);
-      margin-bottom: 6px;
-      line-height: 1.35;
-      word-break: break-word;
-      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
     }
     .song-singer {
-      font-size: 14px;
-      color: var(--text-sub);
-      margin-bottom: 12px;
-      font-weight: 500;
-    }
-    .tag-bar {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
       font-size: 12px;
-      color: var(--primary);
-      background: rgba(59, 130, 246, 0.1);
-      padding: 5px 14px;
-      border-radius: 14px;
-      margin-bottom: 16px;
-      font-weight: 500;
-    }
-
-    /* APlayer 全面重写与大视窗沉浸歌词 */
-    #aplayer {
-      width: 100%;
-      border-radius: 16px;
-      box-shadow: none !important;
-      border: none !important;
-      background: transparent !important;
-      margin-top: 4px;
-      margin-bottom: 10px;
-    }
-    .aplayer .aplayer-pic {
-      display: none !important; /* 隐藏小封面，上方已有大唱片 */
-    }
-    .aplayer .aplayer-info {
-      margin-left: 0 !important;
-      padding: 4px 6px 0 !important;
-      border-bottom: none !important;
-    }
-    .aplayer .aplayer-info .aplayer-music {
-      display: none !important; /* 隐藏重复的歌名歌手 */
-    }
-    .aplayer .aplayer-info .aplayer-controller {
-      padding: 6px 0 0 !important;
-    }
-    .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap {
-      margin: 0 0 10px 0 !important;
-      padding: 6px 0 !important;
-    }
-    .aplayer .aplayer-bar {
-      height: 5px !important;
-      border-radius: 3px !important;
-      background: rgba(148, 163, 184, 0.25) !important;
-    }
-    .aplayer .aplayer-played {
-      background: var(--primary) !important;
-      height: 5px !important;
-      border-radius: 3px !important;
-    }
-    .aplayer .aplayer-thumb {
-      background: var(--primary) !important;
-      width: 13px !important;
-      height: 13px !important;
-      margin-top: -4px !important;
-      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4) !important;
-    }
-
-    /* 🌟 大面积沉浸式多行歌词视窗重写（彻底打破 66px 窄窗限制） */
-    .aplayer.aplayer-withlrc .aplayer-lrc {
-      height: 220px !important; /* 扩展为 220px 大视窗，舒适展示 6~8 行 */
-      margin: 12px 0 18px !important;
-      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, transparent 100%) !important;
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, transparent 100%) !important;
-      overflow-y: hidden;
-      cursor: grab;
-      user-select: none;
-    }
-    .aplayer .aplayer-lrc:before,
-    .aplayer .aplayer-lrc:after {
-      display: none !important; /* 移除原有粗糙的小遮罩 */
-    }
-    .aplayer .aplayer-lrc-contents {
-      transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1) !important;
-    }
-    .aplayer .aplayer-lrc p {
-      font-size: 14.5px !important;
-      color: var(--text-sub) !important;
-      line-height: 32px !important; /* 提升单行高度，避免拥挤 */
-      height: 32px !important;
-      opacity: 0.42 !important;
-      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+      color: var(--text-sub);
       white-space: nowrap;
-      text-overflow: ellipsis;
       overflow: hidden;
-      padding: 0 12px;
-      margin: 0 !important;
-      letter-spacing: 0.2px;
+      text-overflow: ellipsis;
+      margin-top: 2px;
     }
-    .aplayer .aplayer-lrc p.aplayer-lrc-current {
-      color: var(--primary) !important;
-      font-weight: 700 !important;
-      font-size: 17.5px !important; /* 当前行清晰放大加粗 */
-      opacity: 1 !important;
-      transform: scale(1.04);
-      text-shadow: 0 2px 10px rgba(59, 130, 246, 0.2);
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+    .header-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 500;
     }
 
-    .play-tip {
-      font-size: 12px;
-      color: var(--text-sub);
-      margin-top: 6px;
-      opacity: 0.8;
-    }
-    .audio-error-tip {
-      display: none;
-      font-size: 12px;
-      color: #ef4444;
-      margin-top: 8px;
-      padding: 8px 14px;
-      background: rgba(239, 68, 68, 0.1);
-      border-radius: 10px;
-      line-height: 1.5;
-    }
-
-    /* 嵌入式微信浮窗指南 */
-    .wechat-guide-card {
-      width: 100%;
-      margin-top: 20px;
-      padding: 12px 16px;
-      background: rgba(59, 130, 246, 0.05);
-      border: 1px dashed rgba(59, 130, 246, 0.3);
-      border-radius: 16px;
-      text-align: left;
-      font-size: 12px;
-      line-height: 1.5;
-      transition: all 0.3s ease;
-    }
-    .guide-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-    .guide-badge {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--primary);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .guide-body {
-      color: var(--text-main);
-      margin-bottom: 2px;
-    }
-    .guide-body strong {
-      color: var(--primary);
-    }
-    .guide-sub {
-      font-size: 11px;
-      color: var(--text-sub);
-      opacity: 0.85;
-    }
-
-    /* 听友边听边评留言区（独立优雅卡片） */
-    .comment-card {
-      width: 100%;
-      background: var(--card-bg);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 24px 20px;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      text-align: left;
-    }
-    .comment-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .comment-header-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .comment-badge {
-      font-size: 11px;
-      font-weight: 600;
-      background: rgba(59, 130, 246, 0.12);
-      color: var(--primary);
-      padding: 2px 9px;
-      border-radius: 10px;
-    }
-    .comment-form {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 18px;
-      background: var(--card-sub-bg);
-      padding: 16px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-    }
-    .input-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    .input-nick {
+    /* 2. 中间大核心视窗（大方形封面 与 沉浸歌词无缝切换） */
+    .main-view {
       flex: 1;
-      padding: 9px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text-main);
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .input-nick:focus {
-      border-color: var(--primary);
-    }
-    .comment-textarea {
-      width: 100%;
-      min-height: 64px;
-      max-height: 140px;
-      resize: vertical;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text-main);
-      font-size: 13px;
-      outline: none;
-      line-height: 1.5;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-    .comment-textarea:focus {
-      border-color: var(--primary);
-    }
-    .form-bottom {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-    }
-    .word-count {
-      font-size: 11px;
-      color: var(--text-sub);
-    }
-    .submit-btn {
-      background: var(--primary);
-      color: #ffffff;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 20px;
-      font-size: 13px;
-      font-weight: 600;
+      justify-content: center;
+      position: relative;
+      margin: 16px 0;
+      min-height: 340px;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
     }
-    .submit-btn:hover {
-      background: var(--primary-hover);
+    /* 封面大卡片（1:1 正方形、大阴影、圆角） */
+    .cover-box {
+      width: 82vw;
+      max-width: 330px;
+      height: 82vw;
+      max-height: 330px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-cover);
+      overflow: hidden;
+      position: relative;
+      background: #1e293b;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
-    .submit-btn:active {
-      transform: scale(0.97);
+    .cover-box.hidden {
+      display: none;
     }
-    .submit-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    .cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
-    /* 评论列表 */
-    .comment-list {
+    /* 🌟 全屏满视窗沉浸歌词（点击封面或 LRC 按钮切换） */
+    .lyric-box {
+      width: 100%;
+      height: 60vh;
+      max-height: 440px;
+      min-height: 320px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+      padding: 60px 16px;
+      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 1) 80%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 1) 80%, transparent 100%);
+      transition: opacity 0.3s ease;
+      scrollbar-width: none;
+    }
+    .lyric-box::-webkit-scrollbar {
+      display: none;
+    }
+    .lyric-box.active {
+      display: flex;
+    }
+    .lyric-line {
+      font-size: 15px;
+      line-height: 36px;
+      min-height: 36px;
+      color: var(--text-muted);
+      opacity: 0.45;
+      text-align: center;
+      transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+      width: 100%;
+      white-space: pre-wrap;
+      word-break: break-word;
+      cursor: pointer;
+    }
+    .lyric-line.active {
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 18px;
+      opacity: 1;
+      transform: scale(1.04);
+      text-shadow: 0 2px 12px rgba(7, 193, 96, 0.25);
+    }
+
+    /* 3. 底部播放控制区 */
+    .bottom-controller {
+      width: 100%;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      max-height: 380px;
-      overflow-y: auto;
-      padding-right: 4px;
+      padding-top: 10px;
     }
-    .comment-empty {
-      text-align: center;
-      padding: 24px 0;
-      font-size: 13px;
-      color: var(--text-sub);
-    }
-    .comment-item {
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: var(--card-sub-bg);
-      border: 1px solid var(--border);
+
+    /* 进度条与时间 */
+    .progress-wrap {
+      width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      animation: fadeIn 0.3s ease;
+      gap: 6px;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background-color: var(--progress-bg);
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+      padding: 8px 0; /* 扩大触控热区 */
+      background-clip: content-box;
     }
-    .comment-item-top {
+    .progress-played {
+      position: absolute;
+      left: 0;
+      top: 8px;
+      height: 4px;
+      background-color: var(--primary);
+      border-radius: 2px;
+      width: 0%;
+      pointer-events: none;
+    }
+    .progress-dot {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+    }
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-sub);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* 核心播放按钮栏 (⏮  ▶  ⏭) */
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      margin: 10px 0 14px;
+    }
+    .control-btn {
+      background: none;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    .control-btn:active {
+      transform: scale(0.9);
+      opacity: 0.8;
+    }
+    .play-btn {
+      width: 58px;
+      height: 58px;
+      background: var(--primary);
+      border-radius: 50%;
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(7, 193, 96, 0.32);
+    }
+    .play-btn svg {
+      width: 26px;
+      height: 26px;
+      fill: currentColor;
+    }
+    .step-btn svg {
+      width: 32px;
+      height: 32px;
+      fill: currentColor;
+    }
+
+    /* 底部操作功能栏 (LRC  ❤️  🔀  💬) */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: 100%;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .footer-action-btn {
+      background: none;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--icon-inactive);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .footer-action-btn.active {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+    .footer-action-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* 微信浮窗轻提示小条 */
+    .wechat-banner {
+      width: 100%;
+      margin-top: 12px;
+      background: var(--primary-light);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      line-height: 1.4;
+    }
+    .wechat-banner strong {
+      color: var(--primary);
+    }
+
+    /* 听友边听边评抽屉面板 (Bottom Drawer) */
+    .comment-drawer-mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .comment-drawer-mask.open {
+      display: block;
+      opacity: 1;
+    }
+    .comment-drawer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      height: 70vh;
+      max-height: 580px;
+      background: var(--card-bg);
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+      z-index: 101;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      padding: 20px 18px 24px;
+    }
+    .comment-drawer.open {
+      transform: translateY(0);
+    }
+    .drawer-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 12px;
+      margin-bottom: 14px;
     }
-    .comment-author {
+    .drawer-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .drawer-close {
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text-sub);
+      padding: 4px;
+      line-height: 1;
+    }
+    .drawer-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .drawer-input-nick {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+    }
+    .drawer-textarea {
+      width: 100%;
+      height: 60px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+    }
+    .drawer-form-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .drawer-send-btn {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .drawer-comments-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .drawer-comment-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .drawer-comment-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-bottom: 4px;
+    }
+    .drawer-comment-author {
       font-weight: 600;
       color: var(--primary);
     }
-    .comment-time {
-      font-size: 11px;
-      color: var(--text-sub);
-      opacity: 0.75;
-    }
-    .comment-text {
-      font-size: 13.5px;
+    .drawer-comment-content {
       color: var(--text-main);
-      line-height: 1.55;
+      line-height: 1.45;
       word-break: break-word;
-      white-space: pre-wrap;
     }
 
     /* 错误与失效状态 */
-    .error-icon {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      color: #ef4444;
-    }
-    .error-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: 8px;
-    }
-    .error-desc {
-      font-size: 13px;
-      color: var(--text-sub);
-      line-height: 1.6;
-    }
-    .footer {
-      margin-top: 10px;
-      font-size: 11px;
-      color: var(--text-sub);
-      opacity: 0.65;
+    .error-card {
+      padding: 40px 20px;
       text-align: center;
-      letter-spacing: 0.5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .error-icon {
+      width: 56px;
+      height: 56px;
+      color: #ef4444;
     }
   </style>
 </head>
 <body>
-  <div class="bg-glow"></div>
-  <div class="bg-glow-2"></div>
+  {% if status == 'valid' %}
+    <audio id="audio" src="{{ audio_url }}" preload="auto"></audio>
 
-  <div class="container">
-    {% if status == 'valid' %}
-      <!-- 音乐主卡片 -->
-      <div class="card">
-        <div id="disc-box" class="disc-box" title="点击播放/暂停">
-          <img id="disc-img" class="disc-img" src="{{ cover_url }}" alt="{{ title }}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'1\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><circle cx=\'12\' cy=\'12\' r=\'3\'/></svg>'">
-          <div class="disc-center"></div>
+    <div class="player-screen">
+      <!-- 1. 顶部 Header -->
+      <header class="header">
+        <div class="header-left">
+          <div class="back-btn" id="back-btn" title="返回" onclick="if(window.history.length>1){window.history.back()}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </div>
+          <div class="song-info">
+            <h1 class="song-title">{{ title }}</h1>
+            <div class="song-singer">{{ singer }}{{ ' · ' ~ album if album else '' }}</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="header-badge">{{ expire_str }}</span>
+        </div>
+      </header>
+
+      <!-- 2. 中间大视窗（大方形封面与满屏沉浸歌词无缝切换） -->
+      <main class="main-view" id="main-view" title="点击切换 封面/歌词">
+        <!-- 大方形封面卡片 -->
+        <div class="cover-box" id="cover-box">
+          <img class="cover-img" id="cover-img" src="{{ cover_url }}" alt="{{ title }}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'1.5\'><rect width=\'24\' height=\'24\' fill=\'%231e293b\'/><circle cx=\'12\' cy=\'12\' r=\'10\'/><circle cx=\'12\' cy=\'12\' r=\'3\'/></svg>'">
         </div>
 
-        <h1 class="song-title">{{ title }}</h1>
-        <div class="song-singer">{{ singer }}{{ ' · ' ~ album if album else '' }}</div>
+        <!-- 满屏沉浸多行歌词 -->
+        <div class="lyric-box" id="lyric-box">
+          <div id="lyric-content-list" style="width: 100%;"></div>
+        </div>
+      </main>
 
-        <div class="tag-bar">
-          <span>🕒 {{ expire_str }}</span>
+      <!-- 3. 底部播放控制区 -->
+      <footer class="bottom-controller">
+        <!-- 进度条与时间轴 -->
+        <div class="progress-wrap">
+          <div class="progress-bar" id="progress-bar">
+            <div class="progress-played" id="progress-played"></div>
+            <div class="progress-dot" id="progress-dot"></div>
+          </div>
+          <div class="time-row">
+            <span id="time-current">00:00</span>
+            <span id="time-duration">00:00</span>
+          </div>
         </div>
 
-        <!-- 播放器核心容器（包含大视窗多行沉浸歌词与控制栏） -->
-        <div id="aplayer"></div>
-        <div id="audio-error-tip" class="audio-error-tip">播放出现异常：音频源加载失败或防盗链超时，建议返回客户端重新分享。</div>
-        <div class="play-tip">点击封面或播放器按钮开始试听，支持歌词随动</div>
+        <!-- 控制按钮栏 (⏮  ▶  ⏭) -->
+        <div class="control-row">
+          <!-- 重放/快退 10 秒 -->
+          <button class="control-btn step-btn" id="prev-btn" title="快退 10 秒">
+            <svg viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line></svg>
+          </button>
 
-        <!-- 嵌入式微信边听边聊/浮窗指南 -->
-        <div class="wechat-guide-card">
-          <div class="guide-header">
-            <span class="guide-badge">💡 微信后台播放秘诀</span>
-          </div>
-          <div class="guide-body">
-            想退回微信聊天继续听歌？点击右上角 <strong>「···」</strong> 选择 <strong>「浮窗」</strong>，音乐即可在微信后台悬浮持续播放！
-          </div>
-          <div class="guide-sub">
-            （小技巧：从屏幕左侧向<strong>右下角拖动松手</strong>，也可一秒快速收进浮窗）
-          </div>
+          <!-- 播放/暂停大圆钮 -->
+          <button class="control-btn play-btn" id="play-btn" title="播放/暂停">
+            <svg id="play-icon" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+            <svg id="pause-icon" viewBox="0 0 24 24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          </button>
+
+          <!-- 快进 10 秒 -->
+          <button class="control-btn step-btn" id="next-btn" title="快进 10 秒">
+            <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+          </button>
+        </div>
+
+        <!-- 底部功能栏 (LRC  ❤️  🔀  💬) -->
+        <div class="footer-bar">
+          <button class="footer-action-btn" id="toggle-lrc-btn" title="显示歌词">
+            <span>LRC</span>
+          </button>
+
+          <button class="footer-action-btn" id="like-btn" title="喜欢/收藏">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+
+          <button class="footer-action-btn" id="repeat-btn" title="单曲循环">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          </button>
+
+          <button class="footer-action-btn" id="comment-btn" title="听友留言">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+
+        <!-- 微信浮窗与后台播放秘诀轻提示 -->
+        <div class="wechat-banner">
+          <span>💡 微信边聊边听：右上角<strong>「···」</strong>选择<strong>「浮窗」</strong>（或向右下角滑动）即可后台播放</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- 听友边听边评抽屉面板 -->
+    <div class="comment-drawer-mask" id="drawer-mask"></div>
+    <div class="comment-drawer" id="comment-drawer">
+      <div class="drawer-header">
+        <div class="drawer-title">💬 听友评价 ({{ comments | length }})</div>
+        <div class="drawer-close" id="drawer-close">&times;</div>
+      </div>
+      <div class="drawer-form">
+        <input type="text" id="drawer-nick" class="drawer-input-nick" placeholder="输入昵称（选填）" maxlength="20">
+        <textarea id="drawer-content" class="drawer-textarea" placeholder="这首歌怎么样？边听边写下评价..." maxlength="300"></textarea>
+        <div class="drawer-form-bottom">
+          <span style="font-size: 11px; color: var(--text-sub);" id="drawer-count">0 / 300</span>
+          <button class="drawer-send-btn" id="drawer-send-btn">发送</button>
         </div>
       </div>
-
-      <!-- 边听边评：听友留言板 -->
-      <div class="comment-card">
-        <div class="comment-header">
-          <div class="comment-header-title">
-            <span>💬 听友评价 / 边听边评</span>
-            <span id="comment-count-badge" class="comment-badge">{{ comments | length }} 条</span>
-          </div>
-          <span style="font-size: 11px; color: var(--text-sub);">免登录即发</span>
-        </div>
-
-        <!-- 评论发布表单 -->
-        <div class="comment-form">
-          <div class="input-row">
-            <input type="text" id="comment-nickname" class="input-nick" placeholder="你的昵称（选填）" maxlength="20">
-          </div>
-          <textarea id="comment-content" class="comment-textarea" placeholder="这首歌怎么样？边听边写下你的感受..." maxlength="300"></textarea>
-          <div class="form-bottom">
-            <span id="word-count" class="word-count">0 / 300</span>
-            <button id="submit-comment-btn" class="submit-btn">发送评价</button>
-          </div>
-        </div>
-
-        <!-- 评论列表 -->
-        <div id="comment-list" class="comment-list">
-          {% if comments and comments | length > 0 %}
-            {% for item in comments %}
-              <div class="comment-item" data-id="{{ item.id }}">
-                <div class="comment-item-top">
-                  <span class="comment-author">{{ item.nickname }}</span>
-                  <span class="comment-time" data-timestamp="{{ item.created_at }}"></span>
-                </div>
-                <div class="comment-text">{{ item.content }}</div>
+      <div class="drawer-comments-list" id="drawer-comments-list">
+        {% if comments and comments | length > 0 %}
+          {% for item in comments %}
+            <div class="drawer-comment-item">
+              <div class="drawer-comment-meta">
+                <span class="drawer-comment-author">{{ item.nickname }}</span>
+                <span class="comment-time" data-timestamp="{{ item.created_at }}"></span>
               </div>
-            {% endfor %}
-          {% else %}
-            <div id="empty-comment-tip" class="comment-empty">还没有人评价这首歌，快来留下你的第一句感受吧~</div>
-          {% endif %}
-        </div>
+              <div class="drawer-comment-content">{{ item.content }}</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div id="drawer-empty" style="text-align: center; color: var(--text-sub); padding: 24px 0; font-size: 13px;">暂无评价，快来抢沙发~</div>
+        {% endif %}
       </div>
-    {% else %}
-      <div class="card">
+    </div>
+
+  {% else %}
+    <div class="player-screen" style="justify-content: center;">
+      <div class="error-card">
         <svg class="error-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
-        <div class="error-title">该分享已不可用</div>
-        <div class="error-desc">{{ message }}</div>
+        <h2 style="font-size: 18px; font-weight: 700;">该分享已不可用</h2>
+        <p style="color: var(--text-sub); font-size: 13px;">{{ message }}</p>
       </div>
-    {% endif %}
-
-    <div class="footer">
-      Powered by LX Music · TannerLab Private Cloud
     </div>
-  </div>
+  {% endif %}
 
   {% if status == 'valid' %}
-  <script src="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.js"></script>
   <script>
     (function() {
-      // 1. 微信环境检测
-      var isWeChat = /micromessenger/i.test(navigator.userAgent);
-      var guideCard = document.querySelector('.wechat-guide-card');
-      if (isWeChat && guideCard) {
-        guideCard.style.borderColor = 'var(--primary)';
-        guideCard.style.background = 'rgba(59, 130, 246, 0.12)';
+      // 1. 获取核心 DOM 节点
+      var audio = document.getElementById('audio');
+      var playBtn = document.getElementById('play-btn');
+      var playIcon = document.getElementById('play-icon');
+      var pauseIcon = document.getElementById('pause-icon');
+      var prevBtn = document.getElementById('prev-btn');
+      var nextBtn = document.getElementById('next-btn');
+      var progressBar = document.getElementById('progress-bar');
+      var progressPlayed = document.getElementById('progress-played');
+      var progressDot = document.getElementById('progress-dot');
+      var timeCurrent = document.getElementById('time-current');
+      var timeDuration = document.getElementById('time-duration');
+      var mainView = document.getElementById('main-view');
+      var coverBox = document.getElementById('cover-box');
+      var lyricBox = document.getElementById('lyric-box');
+      var toggleLrcBtn = document.getElementById('toggle-lrc-btn');
+      var repeatBtn = document.getElementById('repeat-btn');
+      var likeBtn = document.getElementById('like-btn');
+      var commentBtn = document.getElementById('comment-btn');
+      var drawerMask = document.getElementById('drawer-mask');
+      var commentDrawer = document.getElementById('comment-drawer');
+      var drawerClose = document.getElementById('drawer-close');
+
+      var isLoop = false;
+      var isLiked = false;
+      var showLyric = false;
+      var parsedLyrics = [];
+      var activeLyricIndex = -1;
+      var isDraggingProgress = false;
+      var rawLrcText = {{ (lrc_text or '') | tojson }};
+      var lrcUrl = {{ (lrc_url or '') | tojson }};
+      var code = {{ code | tojson }};
+
+      // 2. 格式化时间函数 (秒 -> mm:ss)
+      function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '00:00';
+        var m = Math.floor(seconds / 60);
+        var s = Math.floor(seconds % 60);
+        return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
       }
 
-      // 2. 初始化 APlayer
-      var discBox = document.getElementById('disc-box');
-      var discImg = document.getElementById('disc-img');
-      var errorTip = document.getElementById('audio-error-tip');
-      var lrcContent = {{ (lrc_text or '') | tojson }};
+      // 3. LRC 歌词解析
+      function parseLrc(lrc) {
+        if (!lrc) return [];
+        var lines = lrc.split('\n');
+        var res = [];
+        var timeExp = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+        lines.forEach(function(line) {
+          var text = line.replace(timeExp, '').trim();
+          var match;
+          timeExp.lastIndex = 0;
+          while ((match = timeExp.exec(line)) !== null) {
+            var min = parseInt(match[1]);
+            var sec = parseInt(match[2]);
+            var ms = match[3] ? (match[3].length === 2 ? parseInt(match[3]) * 10 : parseInt(match[3])) : 0;
+            var t = min * 60 + sec + ms / 1000;
+            res.push({ time: t, text: text || '...' });
+          }
+        });
+        res.sort(function(a, b) { return a.time - b.time; });
+        return res;
+      }
 
-      var ap = new APlayer({
-        container: document.getElementById('aplayer'),
-        lrcType: lrcContent ? 1 : ({% if lrc_url %}3{% else %}0{% endif %}),
-        theme: '#3b82f6',
-        audio: [{
-          name: {{ title | tojson }},
-          artist: {{ singer | tojson }},
-          url: {{ audio_url | tojson }},
-          cover: {{ cover_url | tojson }},
-          lrc: lrcContent || {% if lrc_url %}{{ lrc_url | tojson }}{% else %}''{% endif %}
-        }]
-      });
+      // 渲染歌词 DOM
+      function renderLyricList(lyrics) {
+        parsedLyrics = lyrics;
+        var container = document.getElementById('lyric-content-list');
+        if (!container) return;
+        if (!lyrics.length) {
+          container.innerHTML = '<div style="text-align: center; color: var(--text-sub); padding: 40px 0;">纯音乐 / 暂无歌词</div>';
+          return;
+        }
+        var html = '';
+        lyrics.forEach(function(item, idx) {
+          html += '<div class="lyric-line" id="lrc-' + idx + '" data-time="' + item.time + '">' + escapeHtml(item.text) + '</div>';
+        });
+        container.innerHTML = html;
 
-      if (discBox) {
-        discBox.addEventListener('click', function() {
-          ap.toggle();
+        // 点击某句歌词直接 Seek 跳转
+        container.querySelectorAll('.lyric-line').forEach(function(el) {
+          el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var t = parseFloat(el.getAttribute('data-time'));
+            if (!isNaN(t)) {
+              audio.currentTime = t;
+              if (audio.paused) audio.play();
+            }
+          });
         });
       }
 
-      // 3. 系统级 MediaSession 支持（锁屏、通知栏及后台控制）
+      // 加载歌词
+      if (rawLrcText) {
+        renderLyricList(parseLrc(rawLrcText));
+      } else if (lrcUrl) {
+        fetch(lrcUrl).then(function(r) { return r.text(); }).then(function(text) {
+          renderLyricList(parseLrc(text));
+        }).catch(function() {
+          renderLyricList([]);
+        });
+      }
+
+      // 4. 切换 封面 / 歌词模式
+      function setViewMode(lyricMode) {
+        showLyric = lyricMode;
+        if (showLyric) {
+          coverBox.classList.add('hidden');
+          lyricBox.classList.add('active');
+          toggleLrcBtn.classList.add('active');
+          scrollCurrentLyric();
+        } else {
+          coverBox.classList.remove('hidden');
+          lyricBox.classList.remove('active');
+          toggleLrcBtn.classList.remove('active');
+        }
+      }
+
+      mainView.addEventListener('click', function(e) {
+        // 如果点击的是歌词条目跳进度则不切换
+        if (e.target.classList.contains('lyric-line')) return;
+        setViewMode(!showLyric);
+      });
+      toggleLrcBtn.addEventListener('click', function() {
+        setViewMode(!showLyric);
+      });
+
+      // 5. 播放/暂停控制
+      function updatePlayState(playing) {
+        if (playing) {
+          playIcon.style.display = 'none';
+          pauseIcon.style.display = 'block';
+        } else {
+          playIcon.style.display = 'block';
+          pauseIcon.style.display = 'none';
+        }
+      }
+
+      playBtn.addEventListener('click', function() {
+        if (audio.paused) {
+          audio.play().catch(function(err) {
+            console.warn('播放失败:', err);
+          });
+        } else {
+          audio.pause();
+        }
+      });
+
+      // 快退 10 秒 / 快进 10 秒
+      prevBtn.addEventListener('click', function() {
+        audio.currentTime = Math.max(0, audio.currentTime - 10);
+      });
+      nextBtn.addEventListener('click', function() {
+        audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10);
+      });
+
+      // 单曲循环切换
+      repeatBtn.addEventListener('click', function() {
+        isLoop = !isLoop;
+        audio.loop = isLoop;
+        if (isLoop) {
+          repeatBtn.classList.add('active');
+        } else {
+          repeatBtn.classList.remove('active');
+        }
+      });
+
+      // 收藏喜欢切换
+      likeBtn.addEventListener('click', function() {
+        isLiked = !isLiked;
+        if (isLiked) {
+          likeBtn.classList.add('active');
+          likeBtn.querySelector('svg').setAttribute('fill', 'currentColor');
+        } else {
+          likeBtn.classList.remove('active');
+          likeBtn.querySelector('svg').setAttribute('fill', 'none');
+        }
+      });
+
+      // 6. 播放进度与歌词高亮滚动
+      function scrollCurrentLyric() {
+        if (!showLyric || activeLyricIndex < 0) return;
+        var activeEl = document.getElementById('lrc-' + activeLyricIndex);
+        if (activeEl && lyricBox) {
+          var targetTop = activeEl.offsetTop - lyricBox.clientHeight / 2 + activeEl.clientHeight / 2;
+          lyricBox.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+        }
+      }
+
+      audio.addEventListener('timeupdate', function() {
+        if (!isDraggingProgress && audio.duration) {
+          var cur = audio.currentTime;
+          var dur = audio.duration;
+          var percent = (cur / dur) * 100;
+          progressPlayed.style.width = percent + '%';
+          progressDot.style.left = percent + '%';
+          timeCurrent.textContent = formatTime(cur);
+          timeDuration.textContent = formatTime(dur);
+        }
+
+        // 查找当前对应歌词
+        if (parsedLyrics.length) {
+          var curTime = audio.currentTime;
+          var newIdx = -1;
+          for (var i = 0; i < parsedLyrics.length; i++) {
+            if (curTime >= parsedLyrics[i].time) {
+              newIdx = i;
+            } else {
+              break;
+            }
+          }
+          if (newIdx !== activeLyricIndex) {
+            if (activeLyricIndex >= 0) {
+              var oldEl = document.getElementById('lrc-' + activeLyricIndex);
+              if (oldEl) oldEl.classList.remove('active');
+            }
+            activeLyricIndex = newIdx;
+            if (activeLyricIndex >= 0) {
+              var currentEl = document.getElementById('lrc-' + activeLyricIndex);
+              if (currentEl) {
+                currentEl.classList.add('active');
+                scrollCurrentLyric();
+              }
+            }
+          }
+        }
+      });
+
+      audio.addEventListener('play', function() {
+        updatePlayState(true);
+        setupMediaSession();
+      });
+      audio.addEventListener('pause', function() {
+        updatePlayState(false);
+      });
+      audio.addEventListener('ended', function() {
+        updatePlayState(false);
+      });
+      audio.addEventListener('loadedmetadata', function() {
+        timeDuration.textContent = formatTime(audio.duration);
+      });
+
+      // 7. 进度条点击与滑动 Seek
+      function handleSeek(e) {
+        var rect = progressBar.getBoundingClientRect();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        if (audio.duration) {
+          audio.currentTime = pos * audio.duration;
+        }
+      }
+
+      progressBar.addEventListener('click', handleSeek);
+      progressBar.addEventListener('touchstart', function(e) {
+        isDraggingProgress = true;
+        handleSeek(e);
+      });
+      progressBar.addEventListener('touchmove', function(e) {
+        if (isDraggingProgress) handleSeek(e);
+      });
+      progressBar.addEventListener('touchend', function() {
+        isDraggingProgress = false;
+      });
+
+      // 8. 系统通知栏与后台播放 (MediaSession)
       function setupMediaSession() {
         if ('mediaSession' in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
@@ -665,132 +935,86 @@
               { src: {{ cover_url | tojson }}, sizes: '512x512', type: 'image/jpeg' }
             ]
           });
-          navigator.mediaSession.setActionHandler('play', function() { ap.play(); });
-          navigator.mediaSession.setActionHandler('pause', function() { ap.pause(); });
+          navigator.mediaSession.setActionHandler('play', function() { audio.play(); });
+          navigator.mediaSession.setActionHandler('pause', function() { audio.pause(); });
           navigator.mediaSession.setActionHandler('seekto', function(details) {
-            if (details.seekTime != null) ap.seek(details.seekTime);
+            if (details.seekTime != null) audio.currentTime = details.seekTime;
           });
         }
       }
 
-      ap.on('play', function() {
-        if (discImg) discImg.classList.add('playing');
-        if (errorTip) errorTip.style.display = 'none';
-        setupMediaSession();
-      });
-      ap.on('pause', function() {
-        if (discImg) discImg.classList.remove('playing');
-      });
-      ap.on('ended', function() {
-        if (discImg) discImg.classList.remove('playing');
-      });
-      ap.on('error', function() {
-        if (discImg) discImg.classList.remove('playing');
-        if (errorTip) errorTip.style.display = 'block';
-      });
-
-      // 4. 听友即时评价/留言功能
-      var nickInput = document.getElementById('comment-nickname');
-      var contentTextarea = document.getElementById('comment-content');
-      var wordCountEl = document.getElementById('word-count');
-      var submitBtn = document.getElementById('submit-comment-btn');
-      var commentList = document.getElementById('comment-list');
-      var countBadge = document.getElementById('comment-count-badge');
-      var emptyTip = document.getElementById('empty-comment-tip');
-      var code = {{ code | tojson }};
-
-      // 读取本地记忆昵称
-      var savedNick = localStorage.getItem('lx_share_nick') || '';
-      if (nickInput) {
-        nickInput.value = savedNick;
-        nickInput.addEventListener('change', function() {
-          localStorage.setItem('lx_share_nick', nickInput.value.trim());
-        });
+      // 9. 听友评价抽屉开关
+      function openDrawer() {
+        drawerMask.classList.add('open');
+        commentDrawer.classList.add('open');
+      }
+      function closeDrawer() {
+        drawerMask.classList.remove('open');
+        commentDrawer.classList.remove('open');
       }
 
-      if (contentTextarea && wordCountEl) {
-        contentTextarea.addEventListener('input', function() {
-          wordCountEl.textContent = contentTextarea.value.length + ' / 300';
-        });
-      }
+      commentBtn.addEventListener('click', openDrawer);
+      drawerMask.addEventListener('click', closeDrawer);
+      drawerClose.addEventListener('click', closeDrawer);
 
-      // 时间友好格式化
-      function formatTime(timestamp) {
-        if (!timestamp) return '';
-        var diff = Math.floor(Date.now() / 1000) - timestamp;
-        if (diff < 60) return '刚刚';
-        if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
-        if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
-        if (diff < 86400 * 30) return Math.floor(diff / 86400) + ' 天前';
-        var d = new Date(timestamp * 1000);
-        return (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
-      }
+      // 发送评价逻辑
+      var drawerNick = document.getElementById('drawer-nick');
+      var drawerContent = document.getElementById('drawer-content');
+      var drawerSendBtn = document.getElementById('drawer-send-btn');
+      var drawerCommentsList = document.getElementById('drawer-comments-list');
+      var drawerEmpty = document.getElementById('drawer-empty');
 
-      // 格式化已有评论的时间
-      document.querySelectorAll('.comment-time').forEach(function(el) {
-        var ts = parseInt(el.getAttribute('data-timestamp'));
-        if (ts) el.textContent = formatTime(ts);
+      drawerNick.value = localStorage.getItem('lx_share_nick') || '';
+      drawerNick.addEventListener('change', function() {
+        localStorage.setItem('lx_share_nick', drawerNick.value.trim());
       });
 
-      // 发送留言
-      if (submitBtn) {
-        submitBtn.addEventListener('click', async function() {
-          var content = contentTextarea.value.trim();
-          if (!content) {
-            alert('请先输入评价内容');
-            contentTextarea.focus();
-            return;
-          }
-          var nickname = nickInput.value.trim() || '听友';
-          localStorage.setItem('lx_share_nick', nickname);
+      drawerSendBtn.addEventListener('click', async function() {
+        var content = drawerContent.value.trim();
+        if (!content) {
+          alert('请先输入评价内容');
+          return;
+        }
+        var nickname = drawerNick.value.trim() || '听友';
+        localStorage.setItem('lx_share_nick', nickname);
 
-          submitBtn.disabled = true;
-          submitBtn.textContent = '发送中...';
+        drawerSendBtn.disabled = true;
+        drawerSendBtn.textContent = '发送中...';
 
-          try {
-            var res = await fetch('/api/comments/' + code, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ nickname: nickname, content: content })
-            });
-            if (!res.ok) {
-              var errData = await res.json().catch(function() { return {}; });
-              throw new Error(errData.detail || '提交失败 (' + res.status + ')');
+        try {
+          var res = await fetch('/api/comments/' + code, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nickname: nickname, content: content })
+          });
+          if (!res.ok) throw new Error('提交失败');
+          var d = await res.json();
+          if (d.code === 0 && d.data) {
+            drawerContent.value = '';
+            if (drawerEmpty) drawerEmpty.style.display = 'none';
+
+            var item = d.data;
+            var div = document.createElement('div');
+            div.className = 'drawer-comment-item';
+            div.innerHTML = '<div class="drawer-comment-meta">' +
+              '<span class="drawer-comment-author">' + escapeHtml(item.nickname) + '</span>' +
+              '<span>刚刚</span>' +
+              '</div>' +
+              '<div class="drawer-comment-content">' + escapeHtml(item.content) + '</div>';
+
+            if (drawerCommentsList.firstChild) {
+              drawerCommentsList.insertBefore(div, drawerCommentsList.firstChild);
+            } else {
+              drawerCommentsList.appendChild(div);
             }
-            var data = await res.json();
-            if (data.code === 0 && data.data) {
-              var item = data.data;
-              contentTextarea.value = '';
-              wordCountEl.textContent = '0 / 300';
-              if (emptyTip) emptyTip.style.display = 'none';
-
-              // 创建新评论卡片并插入到最前面
-              var div = document.createElement('div');
-              div.className = 'comment-item';
-              div.innerHTML = '<div class="comment-item-top">' +
-                '<span class="comment-author">' + escapeHtml(item.nickname) + '</span>' +
-                '<span class="comment-time">' + formatTime(item.created_at) + '</span>' +
-                '</div>' +
-                '<div class="comment-text">' + escapeHtml(item.content) + '</div>';
-
-              if (commentList.firstChild) {
-                commentList.insertBefore(div, commentList.firstChild);
-              } else {
-                commentList.appendChild(div);
-              }
-
-              // 更新徽章数字
-              var currentItems = commentList.querySelectorAll('.comment-item').length;
-              if (countBadge) countBadge.textContent = currentItems + ' 条';
-            }
-          } catch (err) {
-            alert('发表评价失败：' + err.message);
-          } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '发送评价';
           }
-        });
-      }
+        } catch (err) {
+          alert('发表失败：' + err.message);
+        } finally {
+          drawerSendBtn.disabled = false;
+          drawerSendBtn.textContent = '发送';
+        }
+      });
 
       function escapeHtml(text) {
         var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
