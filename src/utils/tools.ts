@@ -339,7 +339,10 @@ export const formatMusicName = (format: string, name: string, singer: string) =>
 export const shareToCustomServer = async(musicInfo: LX.Music.MusicInfo, customTtlDays?: number): Promise<string> => {
   const { getMusicUrl, getPicPath, getLyricInfo } = await import('@/core/music')
   const settingState = (await import('@/store/setting/state')).default
-  const serverUrl = settingState.setting['common.shareServerUrl']?.trim() || 'https://music.tannerlab.cn'
+  const serverUrl = settingState.setting['common.shareServerUrl']?.trim() || ''
+  if (!serverUrl) {
+    throw new Error(global.i18n.t('share_custom_server_no_url'))
+  }
   const token = settingState.setting['common.shareServerToken']?.trim() || ''
   const ttlDays = customTtlDays !== undefined ? customTtlDays : (settingState.setting['common.shareExpireDays'] ?? 7)
 

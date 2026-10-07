@@ -108,9 +108,6 @@ export const initSetting = async() => {
     if (!setting['common.shareType'] || (setting['common.shareType'] as any) === 'system') {
       setting['common.shareType'] = 'custom_server'
     }
-    if (!setting['common.shareServerUrl']) {
-      setting['common.shareServerUrl'] = 'https://music.tannerlab.cn'
-    }
   }
 
   // console.log(setting)

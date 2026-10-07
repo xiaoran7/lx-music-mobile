@@ -32,7 +32,7 @@ MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 
 # 基础环境变量配置
-BASE_URL = os.getenv("BASE_URL", "https://music.tannerlab.cn").rstrip("/")
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000").rstrip("/")
 SHARE_TOKEN = os.getenv("SHARE_TOKEN", "")  # 若设置则必须验证 token
 DEFAULT_TTL_DAYS = int(os.getenv("DEFAULT_TTL_DAYS", "7"))
 MAX_AUDIO_SIZE_BYTES = 100 * 1024 * 1024  # 100MB

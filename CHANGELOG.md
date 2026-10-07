@@ -1,5 +1,13 @@
 # lx-music-mobile change log
 
+## 2026-10-07 — 重构开源发布文档与生产环境配置脱敏
+
+- 重构 `README.md`：致敬原作者 lyswhut，系统梳理“落雪全家桶”（Desktop、Mobile、Sync Server、Share Server）生态架构与移动端特色。
+- 编写落雪全家桶双服务端保姆级部署指南：包含 Sync Server（Docker/Node.js/Nginx WebSocket）与 Share Server（FastAPI/Systemd/Nginx Range 206）完整配置，并说明本仓 `server/` 目录内置服务端源码。
+- 生产环境配置脱敏：剔除所有私有域名与服务器信息，将默认分享地址与占位符规范为通用示例。
+- 完善未配置分享服务时的友好交互提示与多语言词条（`share_custom_server_no_url`）。
+- 服务端配置文件通用化：将 `server/music-tannerlab-cn.conf` 重命名为 `server/nginx-music-share.conf` 并将域名标准化为 `music.example.com`。
+
 ## 2026-10-07 — 私有云音乐分享系统与 Web 播放服务端落地
 
 - 彻底根治播放按钮上移与中间空白问题：将音量微调浮层完全改为 `position: absolute` 悬浮气泡，彻底脱离常规文档流，平时不占任何垂直像素高度；将控制按钮外边距收敛紧凑，消灭底栏上方的无谓空隙；同时将正方形封面尺寸饱满提升至 `min(84vw, 42vh)`（最大 340px），充实填补视窗中心，整体排版比例回归黄金协调。
@@ -25,7 +33,7 @@
 - 手机端启动时自动平滑升级旧版默认配置（将旧的系统分享 `system` 迁移至 `custom_server`），确保开箱即用生成专属 Web 播放单页短链。
 - 手机端点击“分享歌曲”自动一键提取当前歌曲的播放直链、专辑封面与 LRC 歌词，异步推送到私有服务端，生成短链自动写入系统剪贴板。
 - 新增分享有效期限（TTL）机制，支持 1天、3天、7天、30天与永久，服务端后台定时扫描物理清理过期文件与记录，防止磁盘膨胀。
-- 建立并部署服务端工程（FastAPI + APlayer），国内服务器（`music.tannerlab.cn`）签发 Let's Encrypt 证书并配置 Nginx 原生 Range 206 音频分片直出，完美兼容 iOS Safari 与微信内手势播放。
+- 建立并部署服务端工程（FastAPI + APlayer），自建私有云服务（如 `https://music.example.com`）签发 SSL 证书并配置 Nginx 原生 Range 206 音频分片直出，完美兼容 iOS Safari 与微信内手势播放。
 - 更新基本设置界面 `ShareType.tsx` 与多语言包（中/繁/英），提供服务器地址、访问 Token 与有效期限选择。
 
 ## 2026-10-07 — 跨端架构与同步协议文档独立收敛
