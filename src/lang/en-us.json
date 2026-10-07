@@ -401,6 +401,7 @@
   "share_card_title_music": "Share \"{name}\" to...",
   "share_title_music": "Song Sharing",
   "share_custom_server_loading": "Generating share link...",
+  "share_custom_server_no_url": "Please configure share server URL in Settings > Basic first",
   "share_custom_server_success": "Share link copied to clipboard!",
   "share_custom_server_success_ttl": "Share link copied ({days} days valid)!",
   "share_custom_server_fail": "Failed to generate share link: {msg}",

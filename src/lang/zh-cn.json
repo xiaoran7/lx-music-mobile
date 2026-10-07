@@ -401,6 +401,7 @@
   "share_card_title_music": "将「{name}」分享到...",
   "share_title_music": "歌曲分享",
   "share_custom_server_loading": "正在生成私有云分享链接...",
+  "share_custom_server_no_url": "请先前往【设置 - 基本设置 - 私有分享服务】配置服务端地址",
   "share_custom_server_success": "分享链接已复制到剪贴板！",
   "share_custom_server_success_ttl": "已复制分享链接 ({days}天有效)！",
   "share_custom_server_fail": "生成分享链接失败：{msg}",

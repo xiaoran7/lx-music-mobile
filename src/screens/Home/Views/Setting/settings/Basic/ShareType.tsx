@@ -102,7 +102,7 @@ export default memo(() => {
               value={serverUrl}
               label={t('setting_basic_share_server_url')}
               onChanged={handleSetUrl}
-              placeholder="https://music.tannerlab.cn"
+              placeholder="https://music.example.com"
             />
             <InputItem
               value={serverToken}
