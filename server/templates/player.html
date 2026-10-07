@@ -54,28 +54,40 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
-    body {
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      position: fixed;
+      width: 100%;
+      left: 0;
+      top: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       background-color: var(--bg);
       color: var(--text-main);
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      position: relative;
-      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
-    /* 整体播放器容器（高度自适应手机全屏） */
+    /* 整体播放器容器（固定视窗高度，严禁整页上下滑动） */
     .player-screen {
       width: 100%;
-      max-width: 480px;
-      min-height: 100vh;
+      max-width: 440px;
+      height: 100%;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 16px 20px 24px;
+      padding: 10px 20px calc(14px + env(safe-area-inset-bottom));
+      box-sizing: border-box;
       position: relative;
+      margin: 0 auto;
+      overflow: hidden;
     }
 
     /* 1. 顶部 Header 栏 */
@@ -84,8 +96,9 @@
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      padding-top: 8px;
-      padding-bottom: 12px;
+      padding-top: 4px;
+      padding-bottom: 6px;
+      flex-shrink: 0;
     }
     .header-left {
       display: flex;
@@ -142,29 +155,52 @@
       font-weight: 500;
     }
 
-    /* 2. 中间大核心视窗（大方形封面 与 沉浸歌词无缝切换） */
+    /* 微信浮窗轻提示小条（置于顶部，紧凑不占高度） */
+    .wechat-banner {
+      width: 100%;
+      margin: 4px 0 6px;
+      background: var(--primary-light);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.35;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .wechat-banner strong {
+      color: var(--primary);
+    }
+
+    /* 2. 中间大核心视窗（大方形封面 与 沉浸歌词无缝切换，弹性适配全屏剩余高度） */
     .main-view {
       flex: 1;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      margin: 16px 0;
-      min-height: 340px;
+      margin: 6px 0 10px;
+      overflow: hidden;
       cursor: pointer;
     }
-    /* 封面大卡片（1:1 正方形、大阴影、圆角） */
+    /* 封面大卡片（1:1 正方形、大阴影、圆角、最大不超 38vh/74vw） */
     .cover-box {
-      width: 82vw;
-      max-width: 330px;
-      height: 82vw;
-      max-height: 330px;
+      width: min(74vw, 36vh);
+      height: min(74vw, 36vh);
+      max-width: 300px;
+      max-height: 300px;
+      aspect-ratio: 1 / 1;
       border-radius: 16px;
       box-shadow: var(--shadow-cover);
       overflow: hidden;
       position: relative;
       background: #1e293b;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      flex-shrink: 0;
     }
     .cover-box.hidden {
       display: none;
@@ -176,21 +212,20 @@
       display: block;
     }
 
-    /* 🌟 全屏满视窗沉浸歌词（点击封面或 LRC 按钮切换） */
+    /* 🌟 全屏满视窗沉浸歌词（点击封面或任意歌词/空白均可秒切回封面） */
     .lyric-box {
       width: 100%;
-      height: 60vh;
-      max-height: 440px;
-      min-height: 320px;
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
       display: none;
       flex-direction: column;
       align-items: center;
       overflow-y: auto;
       scroll-behavior: smooth;
-      padding: 60px 16px;
-      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 1) 80%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 1) 80%, transparent 100%);
-      transition: opacity 0.3s ease;
+      padding: 30px 12px;
+      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, transparent 100%);
       scrollbar-width: none;
     }
     .lyric-box::-webkit-scrollbar {
@@ -201,8 +236,8 @@
     }
     .lyric-line {
       font-size: 15px;
-      line-height: 36px;
-      min-height: 36px;
+      line-height: 35px;
+      min-height: 35px;
       color: var(--text-muted);
       opacity: 0.45;
       text-align: center;
@@ -350,24 +385,6 @@
       width: 20px;
       height: 20px;
       fill: currentColor;
-    }
-
-    /* 微信浮窗轻提示小条 */
-    .wechat-banner {
-      width: 100%;
-      margin-top: 12px;
-      background: var(--primary-light);
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 11.5px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      line-height: 1.4;
-    }
-    .wechat-banner strong {
-      color: var(--primary);
     }
 
     /* 听友边听边评抽屉面板 (Bottom Drawer) */
@@ -542,6 +559,11 @@
         </div>
       </header>
 
+      <!-- 微信浮窗与后台播放秘诀轻提示（置顶紧凑展示） -->
+      <div class="wechat-banner">
+        <span>💡 微信边聊边听：右上角<strong>「···」</strong>选择<strong>「浮窗」</strong>（或向右下角滑动）即可后台播放</span>
+      </div>
+
       <!-- 2. 中间大视窗（大方形封面与满屏沉浸歌词无缝切换） -->
       <main class="main-view" id="main-view" title="点击切换 封面/歌词">
         <!-- 大方形封面卡片 -->
@@ -605,11 +627,6 @@
           <button class="footer-action-btn" id="comment-btn" title="听友留言">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
           </button>
-        </div>
-
-        <!-- 微信浮窗与后台播放秘诀轻提示 -->
-        <div class="wechat-banner">
-          <span>💡 微信边聊边听：右上角<strong>「···」</strong>选择<strong>「浮窗」</strong>（或向右下角滑动）即可后台播放</span>
         </div>
       </footer>
     </div>
@@ -735,21 +752,9 @@
         }
         var html = '';
         lyrics.forEach(function(item, idx) {
-          html += '<div class="lyric-line" id="lrc-' + idx + '" data-time="' + item.time + '">' + escapeHtml(item.text) + '</div>';
+          html += '<div class="lyric-line" id="lrc-' + idx + '">' + escapeHtml(item.text) + '</div>';
         });
         container.innerHTML = html;
-
-        // 点击某句歌词直接 Seek 跳转
-        container.querySelectorAll('.lyric-line').forEach(function(el) {
-          el.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var t = parseFloat(el.getAttribute('data-time'));
-            if (!isNaN(t)) {
-              audio.currentTime = t;
-              if (audio.paused) audio.play();
-            }
-          });
-        });
       }
 
       // 加载歌词
@@ -778,12 +783,31 @@
         }
       }
 
+      var touchStartY = 0;
+      var isSwiping = false;
+
+      lyricBox.addEventListener('touchstart', function(e) {
+        touchStartY = e.touches[0].clientY;
+        isSwiping = false;
+      }, { passive: true });
+
+      lyricBox.addEventListener('touchmove', function(e) {
+        if (Math.abs(e.touches[0].clientY - touchStartY) > 8) {
+          isSwiping = true;
+        }
+      }, { passive: true });
+
+      // 点击中间视窗任何地方（无论是封面、歌词文字还是空白）均顺畅切换模式
       mainView.addEventListener('click', function(e) {
-        // 如果点击的是歌词条目跳进度则不切换
-        if (e.target.classList.contains('lyric-line')) return;
+        if (isSwiping) {
+          isSwiping = false;
+          return;
+        }
         setViewMode(!showLyric);
       });
-      toggleLrcBtn.addEventListener('click', function() {
+
+      toggleLrcBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
         setViewMode(!showLyric);
       });
 
