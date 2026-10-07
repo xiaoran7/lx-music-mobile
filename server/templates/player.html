@@ -97,41 +97,42 @@
       gap: 16px;
     }
 
-    /* 微信「边听边聊」提示条 */
-    .wechat-tip-bar {
-      display: none;
+    /* 嵌入式微信浮窗秘诀卡片 */
+    .wechat-guide-card {
       width: 100%;
-      background: rgba(59, 130, 246, 0.08);
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px dashed rgba(59, 130, 246, 0.32);
       border-radius: 14px;
-      padding: 10px 14px;
+      text-align: left;
       font-size: 12px;
-      color: var(--text-main);
-      position: relative;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      line-height: 1.5;
     }
-    .wechat-tip-bar .tip-title {
+    .guide-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .guide-badge {
+      font-size: 11px;
       font-weight: 600;
       color: var(--primary);
-      margin-bottom: 2px;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
     }
-    .wechat-tip-bar .tip-content {
-      color: var(--text-sub);
-      line-height: 1.45;
+    .guide-body {
+      color: var(--text-main);
+      margin-bottom: 2px;
     }
-    .wechat-tip-bar .close-tip {
-      position: absolute;
-      top: 8px;
-      right: 10px;
-      cursor: pointer;
-      font-size: 16px;
+    .guide-body strong {
+      color: var(--primary);
+    }
+    .guide-sub {
+      font-size: 11px;
       color: var(--text-sub);
-      padding: 2px 6px;
-      line-height: 1;
-      opacity: 0.7;
+      opacity: 0.85;
     }
 
     .card {
@@ -465,13 +466,6 @@
 
   <div class="container">
     {% if status == 'valid' %}
-      <!-- 微信浮窗与边听边聊提示条 -->
-      <div id="wechat-tip-bar" class="wechat-tip-bar">
-        <span class="close-tip" id="close-wechat-tip">&times;</span>
-        <div class="tip-title">💡 微信边听边聊技巧</div>
-        <div class="tip-content">想边听歌边跟好友聊天/评价？点击右上角「···」选择「<strong>浮窗</strong>」，即可在微信中后台悬浮持续播放！</div>
-      </div>
-
       <!-- 音乐主卡片 -->
       <div class="card">
         <div id="disc-box" class="disc-box" title="点击播放/暂停">
@@ -489,6 +483,19 @@
         <div id="aplayer"></div>
         <div id="audio-error-tip" class="audio-error-tip">播放出现异常：音频源加载失败或防盗链超时，建议返回客户端重新分享。</div>
         <div class="play-tip">点击封面或播放器按钮开始试听，支持歌词随动</div>
+
+        <!-- 嵌入式微信边听边聊/浮窗指南 -->
+        <div class="wechat-guide-card">
+          <div class="guide-header">
+            <span class="guide-badge">💡 微信后台播放秘诀</span>
+          </div>
+          <div class="guide-body">
+            想退回微信聊天继续听歌？点击右上角 <strong>「···」</strong> 选择 <strong>「浮窗」</strong>，音乐即可在微信后台悬浮持续播放！
+          </div>
+          <div class="guide-sub">
+            （小技巧：从屏幕左侧向<strong>右下角拖动松手</strong>，也可一秒快速收进浮窗）
+          </div>
+        </div>
       </div>
 
       <!-- 边听边评：听友留言板 -->
@@ -549,22 +556,12 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.js"></script>
   <script>
     (function() {
-      // 1. 微信环境检测与提示
+      // 1. 微信环境检测
       var isWeChat = /micromessenger/i.test(navigator.userAgent);
-      var wechatTipBar = document.getElementById('wechat-tip-bar');
-      var closeTipBtn = document.getElementById('close-wechat-tip');
-
-      if (isWeChat && wechatTipBar) {
-        var hideTip = sessionStorage.getItem('hide_wechat_tip');
-        if (!hideTip) {
-          wechatTipBar.style.display = 'block';
-        }
-      }
-      if (closeTipBtn) {
-        closeTipBtn.addEventListener('click', function() {
-          wechatTipBar.style.display = 'none';
-          sessionStorage.setItem('hide_wechat_tip', '1');
-        });
+      var guideCard = document.querySelector('.wechat-guide-card');
+      if (isWeChat && guideCard) {
+        guideCard.style.borderColor = 'var(--primary)';
+        guideCard.style.background = 'rgba(59, 130, 246, 0.12)';
       }
 
       // 2. 初始化 APlayer
