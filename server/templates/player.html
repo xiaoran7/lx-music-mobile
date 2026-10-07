@@ -103,20 +103,8 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 12px;
       overflow: hidden;
       flex: 1;
-    }
-    .back-btn {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text-main);
-      opacity: 0.8;
-      border-radius: 50%;
     }
     .song-info {
       display: flex;
@@ -179,15 +167,16 @@
     .main-view {
       flex: 1;
       min-height: 0;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      margin: 6px 0 10px;
+      margin: 4px 0 8px;
       overflow: hidden;
       cursor: pointer;
     }
-    /* 封面大卡片（1:1 正方形、大阴影、圆角、最大不超 38vh/74vw） */
+    /* 封面大卡片（1:1 正方形、大阴影、圆角、原生翻页淡入淡出动效） */
     .cover-box {
       width: min(74vw, 36vh);
       height: min(74vw, 36vh);
@@ -197,13 +186,19 @@
       border-radius: 16px;
       box-shadow: var(--shadow-cover);
       overflow: hidden;
-      position: relative;
+      position: absolute;
       background: #1e293b;
-      transition: opacity 0.25s ease, transform 0.25s ease;
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      transition: opacity 0.38s cubic-bezier(0.25, 1, 0.5, 1), transform 0.38s cubic-bezier(0.25, 1, 0.5, 1);
+      pointer-events: auto;
+      will-change: opacity, transform;
       flex-shrink: 0;
     }
     .cover-box.hidden {
-      display: none;
+      opacity: 0;
+      transform: scale(0.88) translateY(12px);
+      pointer-events: none;
     }
     .cover-img {
       width: 100%;
@@ -212,13 +207,13 @@
       display: block;
     }
 
-    /* 🌟 全屏满视窗沉浸歌词（点击封面或任意歌词/空白均可秒切回封面） */
+    /* 🌟 全屏满视窗沉浸歌词（顺滑舒展与淡入动效） */
     .lyric-box {
       width: 100%;
       height: 100%;
       max-height: 100%;
       min-height: 0;
-      display: none;
+      display: flex;
       flex-direction: column;
       align-items: center;
       overflow-y: auto;
@@ -227,12 +222,21 @@
       mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, transparent 100%);
       -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, transparent 100%);
       scrollbar-width: none;
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transform: scale(1.06) translateY(-8px);
+      pointer-events: none;
+      transition: opacity 0.38s cubic-bezier(0.25, 1, 0.5, 1), transform 0.38s cubic-bezier(0.25, 1, 0.5, 1);
+      will-change: opacity, transform;
     }
     .lyric-box::-webkit-scrollbar {
       display: none;
     }
     .lyric-box.active {
-      display: flex;
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
     }
     .lyric-line {
       font-size: 15px;
@@ -309,6 +313,87 @@
       font-size: 12px;
       color: var(--text-sub);
       font-variant-numeric: tabular-nums;
+    }
+
+    /* 音量调节纤细胶囊条 (播放器内部增益 + 手机物理音量双重控制) */
+    .volume-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 0 2px;
+      margin-top: 4px;
+    }
+    .volume-btn {
+      background: none;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      padding: 0;
+      transition: color 0.15s ease;
+    }
+    .volume-btn:active {
+      color: var(--primary);
+    }
+    .volume-btn svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+    .volume-bar-wrap {
+      flex: 1;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      touch-action: none;
+      position: relative;
+    }
+    .volume-bar {
+      width: 100%;
+      height: 3px;
+      background-color: var(--progress-bg);
+      border-radius: 2px;
+      position: relative;
+    }
+    .volume-played {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 3px;
+      background-color: var(--primary);
+      border-radius: 2px;
+      width: 100%;
+      pointer-events: none;
+    }
+    .volume-dot {
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      pointer-events: none;
+    }
+    .volume-text {
+      font-size: 11px;
+      color: var(--text-sub);
+      width: 32px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
     }
 
     /* 核心播放按钮栏 (⏮  ▶  ⏭) */
@@ -544,11 +629,6 @@
       <!-- 1. 顶部 Header -->
       <header class="header">
         <div class="header-left">
-          <div class="back-btn" id="back-btn" title="返回" onclick="if(window.history.length>1){window.history.back()}">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </div>
           <div class="song-info">
             <h1 class="song-title">{{ title }}</h1>
             <div class="song-singer">{{ singer }}{{ ' · ' ~ album if album else '' }}</div>
@@ -589,6 +669,28 @@
             <span id="time-current">00:00</span>
             <span id="time-duration">00:00</span>
           </div>
+        </div>
+
+        <!-- 音量调节纤细胶囊条 (播放器音量 + 手机物理音量双重控制) -->
+        <div class="volume-row">
+          <button class="volume-btn" id="volume-mute-btn" title="静音切换">
+            <svg id="volume-icon-high" viewBox="0 0 24 24">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg id="volume-icon-mute" viewBox="0 0 24 24" style="display: none;">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          </button>
+          <div class="volume-bar-wrap" id="volume-bar-wrap" title="滑动或点击调节播放器音量">
+            <div class="volume-bar" id="volume-bar">
+              <div class="volume-played" id="volume-played"></div>
+              <div class="volume-dot" id="volume-dot"></div>
+            </div>
+          </div>
+          <span class="volume-text" id="volume-text">100%</span>
         </div>
 
         <!-- 控制按钮栏 (⏮  ▶  ⏭) -->
@@ -701,12 +803,23 @@
       var commentDrawer = document.getElementById('comment-drawer');
       var drawerClose = document.getElementById('drawer-close');
 
+      var volumeMuteBtn = document.getElementById('volume-mute-btn');
+      var volumeIconHigh = document.getElementById('volume-icon-high');
+      var volumeIconMute = document.getElementById('volume-icon-mute');
+      var volumeBarWrap = document.getElementById('volume-bar-wrap');
+      var volumeBar = document.getElementById('volume-bar');
+      var volumePlayed = document.getElementById('volume-played');
+      var volumeDot = document.getElementById('volume-dot');
+      var volumeText = document.getElementById('volume-text');
+
       var isLoop = false;
       var isLiked = false;
       var showLyric = false;
       var parsedLyrics = [];
       var activeLyricIndex = -1;
       var isDraggingProgress = false;
+      var isDraggingVolume = false;
+      var lastVolume = 1.0;
       var rawLrcText = {{ (lrc_text or '') | tojson }};
       var lrcUrl = {{ (lrc_url or '') | tojson }};
       var code = {{ code | tojson }};
@@ -863,7 +976,68 @@
         }
       });
 
-      // 6. 播放进度与歌词高亮滚动
+      // 6. 音量调节逻辑 (播放器自身增益音量 + 手机物理音量叠加)
+      var savedVolume = localStorage.getItem('lx_share_volume');
+      var currentVolume = savedVolume !== null ? parseFloat(savedVolume) : 1.0;
+      if (isNaN(currentVolume) || currentVolume < 0 || currentVolume > 1) currentVolume = 1.0;
+
+      function applyVolume(vol, save) {
+        vol = Math.max(0, Math.min(1, vol));
+        currentVolume = vol;
+        try {
+          audio.volume = vol;
+        } catch (e) {
+          console.warn('调节音量失败:', e);
+        }
+        var percent = Math.round(vol * 100);
+        volumePlayed.style.width = percent + '%';
+        volumeDot.style.left = percent + '%';
+        volumeText.textContent = percent + '%';
+
+        if (vol <= 0.01) {
+          volumeIconHigh.style.display = 'none';
+          volumeIconMute.style.display = 'block';
+        } else {
+          volumeIconHigh.style.display = 'block';
+          volumeIconMute.style.display = 'none';
+          lastVolume = vol;
+        }
+        if (save) {
+          localStorage.setItem('lx_share_volume', vol.toString());
+        }
+      }
+
+      applyVolume(currentVolume, false);
+
+      function handleVolumeSeek(e) {
+        var rect = volumeBar.getBoundingClientRect();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        applyVolume(pos, true);
+      }
+
+      volumeBarWrap.addEventListener('click', handleVolumeSeek);
+      volumeBarWrap.addEventListener('touchstart', function(e) {
+        isDraggingVolume = true;
+        handleVolumeSeek(e);
+      }, { passive: true });
+      volumeBarWrap.addEventListener('touchmove', function(e) {
+        if (isDraggingVolume) handleVolumeSeek(e);
+      }, { passive: true });
+      volumeBarWrap.addEventListener('touchend', function() {
+        isDraggingVolume = false;
+      });
+
+      volumeMuteBtn.addEventListener('click', function() {
+        if (currentVolume > 0.01) {
+          lastVolume = currentVolume;
+          applyVolume(0, true);
+        } else {
+          applyVolume(lastVolume > 0.05 ? lastVolume : 0.8, true);
+        }
+      });
+
+      // 7. 播放进度与歌词高亮滚动
       function scrollCurrentLyric() {
         if (!showLyric || activeLyricIndex < 0) return;
         var activeEl = document.getElementById('lrc-' + activeLyricIndex);
