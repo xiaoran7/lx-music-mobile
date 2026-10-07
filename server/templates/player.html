@@ -9,7 +9,7 @@
   <!-- OpenGraph 社交卡片（微信、QQ、社交平台优化） -->
   <meta property="og:type" content="music.song">
   <meta property="og:title" content="{{ title }} - {{ singer }}">
-  <meta property="og:description" content="由洛雪音乐分享，点击免客户端即可在线试听。">
+  <meta property="og:description" content="由洛雪音乐分享，点击免客户端即可在线试听与互动评价。">
   <meta property="og:image" content="{{ cover_url }}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ title }} - {{ singer }}">
@@ -19,20 +19,24 @@
   <style>
     :root {
       --primary: #3b82f6;
+      --primary-hover: #2563eb;
       --primary-light: #60a5fa;
       --bg: #f8fafc;
       --card-bg: rgba(255, 255, 255, 0.94);
+      --card-sub-bg: rgba(248, 250, 252, 0.85);
       --text-main: #0f172a;
       --text-sub: #64748b;
-      --border: rgba(226, 232, 240, 0.8);
+      --border: rgba(226, 232, 240, 0.85);
       --shadow: 0 12px 36px -8px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --primary: #38bdf8;
+        --primary-hover: #0284c7;
         --primary-light: #7dd3fc;
         --bg: #090d16;
         --card-bg: rgba(18, 24, 38, 0.92);
+        --card-sub-bg: rgba(26, 34, 52, 0.7);
         --text-main: #f1f5f9;
         --text-sub: #94a3b8;
         --border: rgba(51, 65, 85, 0.6);
@@ -53,10 +57,10 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 20px 16px;
+      padding: 16px 14px 40px;
       position: relative;
       overflow-x: hidden;
+      line-height: 1.5;
     }
     /* 装饰性加速背景层（规避滚动卡顿） */
     .bg-glow {
@@ -85,12 +89,51 @@
     }
     .container {
       width: 100%;
-      max-width: 440px;
+      max-width: 460px;
       z-index: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 16px;
     }
+
+    /* 微信「边听边聊」提示条 */
+    .wechat-tip-bar {
+      display: none;
+      width: 100%;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--text-main);
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+    .wechat-tip-bar .tip-title {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .wechat-tip-bar .tip-content {
+      color: var(--text-sub);
+      line-height: 1.45;
+    }
+    .wechat-tip-bar .close-tip {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--text-sub);
+      padding: 2px 6px;
+      line-height: 1;
+      opacity: 0.7;
+    }
+
     .card {
       width: 100%;
       background: var(--card-bg);
@@ -98,7 +141,7 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
       border-radius: 24px;
-      padding: 28px 22px;
+      padding: 26px 20px;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
@@ -108,13 +151,13 @@
     }
     /* 封面圆盘 */
     .disc-box {
-      width: 180px;
-      height: 180px;
+      width: 170px;
+      height: 170px;
       border-radius: 50%;
       position: relative;
-      margin-bottom: 24px;
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
-      padding: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
+      padding: 7px;
       background: linear-gradient(135deg, #1e293b, #0f172a);
       display: flex;
       align-items: center;
@@ -140,8 +183,8 @@
     }
     .disc-center {
       position: absolute;
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       background: var(--card-bg);
       border: 4px solid #1e293b;
       border-radius: 50%;
@@ -153,17 +196,17 @@
       to { transform: rotate(360deg); }
     }
     .song-title {
-      font-size: 21px;
+      font-size: 20px;
       font-weight: 700;
       color: var(--text-main);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       line-height: 1.35;
       word-break: break-word;
     }
     .song-singer {
       font-size: 14px;
       color: var(--text-sub);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       font-weight: 500;
     }
     .tag-bar {
@@ -175,7 +218,7 @@
       background: rgba(59, 130, 246, 0.1);
       padding: 4px 12px;
       border-radius: 12px;
-      margin-bottom: 22px;
+      margin-bottom: 18px;
       font-weight: 500;
     }
     /* APlayer 自适应微调 */
@@ -185,13 +228,13 @@
       box-shadow: none;
       border: 1px solid var(--border);
       background: transparent;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     .aplayer .aplayer-info {
       padding: 12px 14px 0 14px !important;
     }
     .aplayer.aplayer-withlrc .aplayer-lrc {
-      margin-top: 10px;
+      margin-top: 8px;
     }
     .aplayer .aplayer-lrc p {
       font-size: 13px;
@@ -204,11 +247,10 @@
       font-weight: 600;
       font-size: 14px;
     }
-    /* 播放引导提示 */
     .play-tip {
       font-size: 12px;
       color: var(--text-sub);
-      margin-top: 14px;
+      margin-top: 10px;
       opacity: 0.85;
     }
     .audio-error-tip {
@@ -221,6 +263,174 @@
       border-radius: 8px;
       line-height: 1.5;
     }
+
+    /* 听友边听边评留言区 */
+    .comment-card {
+      width: 100%;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+    .comment-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .comment-header-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .comment-badge {
+      font-size: 11px;
+      font-weight: 500;
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .comment-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+      background: var(--card-sub-bg);
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .input-nick {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-nick:focus {
+      border-color: var(--primary);
+    }
+    .comment-textarea {
+      width: 100%;
+      min-height: 60px;
+      max-height: 140px;
+      resize: vertical;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-main);
+      font-size: 13px;
+      outline: none;
+      line-height: 1.5;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .comment-textarea:focus {
+      border-color: var(--primary);
+    }
+    .form-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .word-count {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+    .submit-btn {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .submit-btn:hover {
+      background: var(--primary-hover);
+    }
+    .submit-btn:active {
+      transform: scale(0.97);
+    }
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* 评论列表 */
+    .comment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .comment-empty {
+      text-align: center;
+      padding: 24px 0;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+    .comment-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--card-sub-bg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .comment-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .comment-author {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .comment-time {
+      font-size: 11px;
+      color: var(--text-sub);
+      opacity: 0.75;
+    }
+    .comment-text {
+      font-size: 13px;
+      color: var(--text-main);
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
     /* 错误与失效状态 */
     .error-icon {
       width: 64px;
@@ -239,9 +449,8 @@
       color: var(--text-sub);
       line-height: 1.6;
     }
-    /* 底部声明 */
     .footer {
-      margin-top: 24px;
+      margin-top: 8px;
       font-size: 11px;
       color: var(--text-sub);
       opacity: 0.65;
@@ -256,6 +465,14 @@
 
   <div class="container">
     {% if status == 'valid' %}
+      <!-- 微信浮窗与边听边聊提示条 -->
+      <div id="wechat-tip-bar" class="wechat-tip-bar">
+        <span class="close-tip" id="close-wechat-tip">&times;</span>
+        <div class="tip-title">💡 微信边听边聊技巧</div>
+        <div class="tip-content">想边听歌边跟好友聊天/评价？点击右上角「···」选择「<strong>浮窗</strong>」，即可在微信中后台悬浮持续播放！</div>
+      </div>
+
+      <!-- 音乐主卡片 -->
       <div class="card">
         <div id="disc-box" class="disc-box" title="点击播放/暂停">
           <img id="disc-img" class="disc-img" src="{{ cover_url }}" alt="{{ title }}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'1\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><circle cx=\'12\' cy=\'12\' r=\'3\'/></svg>'">
@@ -270,8 +487,48 @@
         </div>
 
         <div id="aplayer"></div>
-        <div id="audio-error-tip" class="audio-error-tip">播放出现异常：音频源加载失败或防盗链超时，建议返回客户端刷新重试。</div>
+        <div id="audio-error-tip" class="audio-error-tip">播放出现异常：音频源加载失败或防盗链超时，建议返回客户端重新分享。</div>
         <div class="play-tip">点击封面或播放器按钮开始试听，支持歌词随动</div>
+      </div>
+
+      <!-- 边听边评：听友留言板 -->
+      <div class="comment-card">
+        <div class="comment-header">
+          <div class="comment-header-title">
+            <span>💬 听友评价 / 边听边评</span>
+            <span id="comment-count-badge" class="comment-badge">{{ comments | length }} 条</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-sub);">免登录即发</span>
+        </div>
+
+        <!-- 评论发布表单 -->
+        <div class="comment-form">
+          <div class="input-row">
+            <input type="text" id="comment-nickname" class="input-nick" placeholder="你的昵称（选填）" maxlength="20">
+          </div>
+          <textarea id="comment-content" class="comment-textarea" placeholder="这首歌怎么样？边听边写下你的感受..." maxlength="300"></textarea>
+          <div class="form-bottom">
+            <span id="word-count" class="word-count">0 / 300</span>
+            <button id="submit-comment-btn" class="submit-btn">发送评价</button>
+          </div>
+        </div>
+
+        <!-- 评论列表 -->
+        <div id="comment-list" class="comment-list">
+          {% if comments and comments | length > 0 %}
+            {% for item in comments %}
+              <div class="comment-item" data-id="{{ item.id }}">
+                <div class="comment-item-top">
+                  <span class="comment-author">{{ item.nickname }}</span>
+                  <span class="comment-time" data-timestamp="{{ item.created_at }}"></span>
+                </div>
+                <div class="comment-text">{{ item.content }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div id="empty-comment-tip" class="comment-empty">还没有人评价这首歌，快来留下你的第一句感受吧~</div>
+          {% endif %}
+        </div>
       </div>
     {% else %}
       <div class="card">
@@ -284,7 +541,7 @@
     {% endif %}
 
     <div class="footer">
-      Powered by LX Music · TannerLab Private Sync
+      Powered by LX Music · TannerLab Private Cloud
     </div>
   </div>
 
@@ -292,6 +549,25 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.js"></script>
   <script>
     (function() {
+      // 1. 微信环境检测与提示
+      var isWeChat = /micromessenger/i.test(navigator.userAgent);
+      var wechatTipBar = document.getElementById('wechat-tip-bar');
+      var closeTipBtn = document.getElementById('close-wechat-tip');
+
+      if (isWeChat && wechatTipBar) {
+        var hideTip = sessionStorage.getItem('hide_wechat_tip');
+        if (!hideTip) {
+          wechatTipBar.style.display = 'block';
+        }
+      }
+      if (closeTipBtn) {
+        closeTipBtn.addEventListener('click', function() {
+          wechatTipBar.style.display = 'none';
+          sessionStorage.setItem('hide_wechat_tip', '1');
+        });
+      }
+
+      // 2. 初始化 APlayer
       var discBox = document.getElementById('disc-box');
       var discImg = document.getElementById('disc-img');
       var errorTip = document.getElementById('audio-error-tip');
@@ -316,9 +592,29 @@
         });
       }
 
+      // 3. 系统级 MediaSession 支持（锁屏、通知栏及后台控制）
+      function setupMediaSession() {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: {{ title | tojson }},
+            artist: {{ singer | tojson }},
+            album: {{ (album or 'LX Music') | tojson }},
+            artwork: [
+              { src: {{ cover_url | tojson }}, sizes: '512x512', type: 'image/jpeg' }
+            ]
+          });
+          navigator.mediaSession.setActionHandler('play', function() { ap.play(); });
+          navigator.mediaSession.setActionHandler('pause', function() { ap.pause(); });
+          navigator.mediaSession.setActionHandler('seekto', function(details) {
+            if (details.seekTime != null) ap.seek(details.seekTime);
+          });
+        }
+      }
+
       ap.on('play', function() {
         if (discImg) discImg.classList.add('playing');
         if (errorTip) errorTip.style.display = 'none';
+        setupMediaSession();
       });
       ap.on('pause', function() {
         if (discImg) discImg.classList.remove('playing');
@@ -330,6 +626,114 @@
         if (discImg) discImg.classList.remove('playing');
         if (errorTip) errorTip.style.display = 'block';
       });
+
+      // 4. 听友即时评价/留言功能
+      var nickInput = document.getElementById('comment-nickname');
+      var contentTextarea = document.getElementById('comment-content');
+      var wordCountEl = document.getElementById('word-count');
+      var submitBtn = document.getElementById('submit-comment-btn');
+      var commentList = document.getElementById('comment-list');
+      var countBadge = document.getElementById('comment-count-badge');
+      var emptyTip = document.getElementById('empty-comment-tip');
+      var code = {{ code | tojson }};
+
+      // 读取本地记忆昵称
+      var savedNick = localStorage.getItem('lx_share_nick') || '';
+      if (nickInput) {
+        nickInput.value = savedNick;
+        nickInput.addEventListener('change', function() {
+          localStorage.setItem('lx_share_nick', nickInput.value.trim());
+        });
+      }
+
+      if (contentTextarea && wordCountEl) {
+        contentTextarea.addEventListener('input', function() {
+          wordCountEl.textContent = contentTextarea.value.length + ' / 300';
+        });
+      }
+
+      // 时间友好格式化
+      function formatTime(timestamp) {
+        if (!timestamp) return '';
+        var diff = Math.floor(Date.now() / 1000) - timestamp;
+        if (diff < 60) return '刚刚';
+        if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+        if (diff < 86400 * 30) return Math.floor(diff / 86400) + ' 天前';
+        var d = new Date(timestamp * 1000);
+        return (d.getMonth() + 1) + '-' + d.getDate() + ' ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
+      }
+
+      // 格式化已有评论的时间
+      document.querySelectorAll('.comment-time').forEach(function(el) {
+        var ts = parseInt(el.getAttribute('data-timestamp'));
+        if (ts) el.textContent = formatTime(ts);
+      });
+
+      // 发送留言
+      if (submitBtn) {
+        submitBtn.addEventListener('click', async function() {
+          var content = contentTextarea.value.trim();
+          if (!content) {
+            alert('请先输入评价内容');
+            contentTextarea.focus();
+            return;
+          }
+          var nickname = nickInput.value.trim() || '听友';
+          localStorage.setItem('lx_share_nick', nickname);
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = '发送中...';
+
+          try {
+            var res = await fetch('/api/comments/' + code, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ nickname: nickname, content: content })
+            });
+            if (!res.ok) {
+              var errData = await res.json().catch(function() { return {}; });
+              throw new Error(errData.detail || '提交失败 (' + res.status + ')');
+            }
+            var data = await res.json();
+            if (data.code === 0 && data.data) {
+              var item = data.data;
+              contentTextarea.value = '';
+              wordCountEl.textContent = '0 / 300';
+              if (emptyTip) emptyTip.style.display = 'none';
+
+              // 创建新评论卡片并插入到最前面
+              var div = document.createElement('div');
+              div.className = 'comment-item';
+              div.innerHTML = '<div class="comment-item-top">' +
+                '<span class="comment-author">' + escapeHtml(item.nickname) + '</span>' +
+                '<span class="comment-time">' + formatTime(item.created_at) + '</span>' +
+                '</div>' +
+                '<div class="comment-text">' + escapeHtml(item.content) + '</div>';
+
+              if (commentList.firstChild) {
+                commentList.insertBefore(div, commentList.firstChild);
+              } else {
+                commentList.appendChild(div);
+              }
+
+              // 更新徽章数字
+              var currentItems = commentList.querySelectorAll('.comment-item').length;
+              if (countBadge) countBadge.textContent = currentItems + ' 条';
+            }
+          } catch (err) {
+            alert('发表评价失败：' + err.message);
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '发送评价';
+          }
+        });
+      }
+
+      function escapeHtml(text) {
+        var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+      }
     })();
   </script>
   {% endif %}

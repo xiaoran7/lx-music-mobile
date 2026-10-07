@@ -74,6 +74,19 @@ def init_db():
     except sqlite3.OperationalError:
         pass
     cur.execute("CREATE INDEX IF NOT EXISTS idx_expire_at ON shares(expire_at)")
+
+    # 评价留言表
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL,
+            nickname TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            user_agent TEXT
+        )
+    """)
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_comments_code ON comments(code)")
     conn.commit()
     conn.close()
 
@@ -185,9 +198,11 @@ async def cleanup_expired_task():
                     target_dir = MEDIA_DIR / code
                     if target_dir.exists():
                         shutil.rmtree(target_dir, ignore_errors=True)
-                cur.execute("DELETE FROM shares WHERE expire_at > 0 AND expire_at < ?", (now,))
+                placeholders = ",".join(["?"] * len(expired_codes))
+                cur.execute(f"DELETE FROM comments WHERE code IN ({placeholders})", expired_codes)
+                cur.execute(f"DELETE FROM shares WHERE expire_at > 0 AND expire_at < ?", (now,))
                 conn.commit()
-                logger.info("过期分享文件及数据库记录清理完成")
+                logger.info("过期分享文件、留言及数据库记录清理完成")
             conn.close()
         except Exception as e:
             logger.error(f"清理任务异常: {e}")
@@ -217,6 +232,11 @@ class ShareRequest(BaseModel):
     picUrl: Optional[str] = None
     lrc: Optional[str] = None
     ttl_days: Optional[int] = Field(default=DEFAULT_TTL_DAYS, ge=0, le=365)
+
+
+class CommentRequest(BaseModel):
+    nickname: Optional[str] = Field(default="听友", max_length=30)
+    content: str = Field(..., min_length=1, max_length=300)
 
 
 @app.post("/api/share")
@@ -302,6 +322,19 @@ async def share_page(code: str, request: Request):
 
     # 增加播放访问统计
     cur.execute("UPDATE shares SET view_count = view_count + 1 WHERE code = ?", (code,))
+
+    # 获取本歌曲已有的听友留言
+    cur.execute("SELECT id, nickname, content, created_at FROM comments WHERE code = ? ORDER BY id ASC LIMIT 100", (code,))
+    comment_rows = cur.fetchall()
+    comments = [
+        {
+            "id": c["id"],
+            "nickname": c["nickname"],
+            "content": c["content"],
+            "created_at": c["created_at"],
+        }
+        for c in comment_rows
+    ]
     conn.commit()
     conn.close()
 
@@ -327,8 +360,74 @@ async def share_page(code: str, request: Request):
             "audio_url": f"/media/{code}/audio.mp3" if row["has_audio"] else (row["raw_audio_url"] or f"/media/{code}/audio.mp3"),
             "cover_url": f"/media/{code}/cover.jpg" if row["has_cover"] else (row["raw_pic_url"] or ""),
             "lrc_url": f"/media/{code}/lyric.lrc" if row["has_lrc"] else "",
+            "comments": comments,
         },
     )
+
+
+@app.get("/api/comments/{code}")
+async def get_comments(code: str):
+    """获取指定分享单页的评价留言"""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT id, nickname, content, created_at FROM comments WHERE code = ? ORDER BY id ASC LIMIT 100", (code,))
+    rows = cur.fetchall()
+    conn.close()
+    return {
+        "code": 0,
+        "data": [
+            {
+                "id": r["id"],
+                "nickname": r["nickname"],
+                "content": r["content"],
+                "created_at": r["created_at"],
+            }
+            for r in rows
+        ],
+    }
+
+
+@app.post("/api/comments/{code}")
+async def add_comment(code: str, req: CommentRequest, request: Request):
+    """发表听友评价/留言"""
+    content = req.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="评价内容不能为空")
+    if len(content) > 300:
+        raise HTTPException(status_code=400, detail="评价内容不能超过300字")
+    nickname = (req.nickname or "听友").strip()[:30] or "听友"
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT expire_at FROM shares WHERE code = ?", (code,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="该分享不存在")
+    now = int(time.time())
+    if row["expire_at"] > 0 and now > row["expire_at"]:
+        conn.close()
+        raise HTTPException(status_code=410, detail="该分享已过期失效")
+
+    ua = request.headers.get("user-agent", "")[:200]
+    cur.execute(
+        "INSERT INTO comments (code, nickname, content, created_at, user_agent) VALUES (?, ?, ?, ?, ?)",
+        (code, nickname, content, now, ua),
+    )
+    conn.commit()
+    comment_id = cur.lastrowid
+    conn.close()
+
+    return {
+        "code": 0,
+        "msg": "success",
+        "data": {
+            "id": comment_id,
+            "nickname": nickname,
+            "content": content,
+            "created_at": now,
+        },
+    }
 
 
 @app.get("/media/{code}/audio")
