@@ -315,14 +315,30 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* 音量调节纤细胶囊条 (播放器内部增益 + 手机物理音量双重控制) */
-    .volume-row {
+    /* 音量微调浮层气泡（点击底栏 🔊 优雅展开，平时隐藏不占空间，彻底告别双条冲突） */
+    .volume-popover {
+      width: calc(100% - 24px);
+      max-width: 320px;
+      margin: 0 auto 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+      border-radius: 20px;
+      padding: 7px 14px;
       display: flex;
       align-items: center;
       gap: 10px;
-      width: 100%;
-      padding: 0 2px;
-      margin-top: 4px;
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      position: relative;
+      z-index: 20;
+    }
+    .volume-popover.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
     }
     .volume-btn {
       background: none;
@@ -360,7 +376,7 @@
     }
     .volume-bar {
       width: 100%;
-      height: 3px;
+      height: 4px;
       background-color: var(--progress-bg);
       border-radius: 2px;
       position: relative;
@@ -369,7 +385,7 @@
       position: absolute;
       left: 0;
       top: 0;
-      height: 3px;
+      height: 4px;
       background-color: var(--primary);
       border-radius: 2px;
       width: 100%;
@@ -380,8 +396,8 @@
       top: 50%;
       left: 100%;
       transform: translate(-50%, -50%);
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background-color: var(--primary);
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
@@ -671,28 +687,6 @@
           </div>
         </div>
 
-        <!-- 音量调节纤细胶囊条 (播放器音量 + 手机物理音量双重控制) -->
-        <div class="volume-row">
-          <button class="volume-btn" id="volume-mute-btn" title="静音切换">
-            <svg id="volume-icon-high" viewBox="0 0 24 24">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-            </svg>
-            <svg id="volume-icon-mute" viewBox="0 0 24 24" style="display: none;">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <line x1="23" y1="9" x2="17" y2="15"></line>
-              <line x1="17" y1="9" x2="23" y2="15"></line>
-            </svg>
-          </button>
-          <div class="volume-bar-wrap" id="volume-bar-wrap" title="滑动或点击调节播放器音量">
-            <div class="volume-bar" id="volume-bar">
-              <div class="volume-played" id="volume-played"></div>
-              <div class="volume-dot" id="volume-dot"></div>
-            </div>
-          </div>
-          <span class="volume-text" id="volume-text">100%</span>
-        </div>
-
         <!-- 控制按钮栏 (⏮  ▶  ⏭) -->
         <div class="control-row">
           <!-- 重放/快退 10 秒 -->
@@ -712,7 +706,29 @@
           </button>
         </div>
 
-        <!-- 底部功能栏 (LRC  ❤️  🔀  💬) -->
+        <!-- 音量微调浮层气泡 (点击底栏 🔊 优雅展开，平时隐藏不占空间) -->
+        <div class="volume-popover" id="volume-popover">
+          <button class="volume-btn" id="volume-mute-btn" title="一键静音">
+            <svg id="volume-icon-high" viewBox="0 0 24 24">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg id="volume-icon-mute" viewBox="0 0 24 24" style="display: none;">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          </button>
+          <div class="volume-bar-wrap" id="volume-bar-wrap" title="滑动或点击调节播放器音量">
+            <div class="volume-bar" id="volume-bar">
+              <div class="volume-played" id="volume-played"></div>
+              <div class="volume-dot" id="volume-dot"></div>
+            </div>
+          </div>
+          <span class="volume-text" id="volume-text">100%</span>
+        </div>
+
+        <!-- 底部功能栏 (LRC  ❤️  🔊  🔁  💬) -->
         <div class="footer-bar">
           <button class="footer-action-btn" id="toggle-lrc-btn" title="显示歌词">
             <span>LRC</span>
@@ -720,6 +736,13 @@
 
           <button class="footer-action-btn" id="like-btn" title="喜欢/收藏">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+
+          <button class="footer-action-btn" id="toggle-volume-btn" title="调节音量">
+            <svg id="footer-volume-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
           </button>
 
           <button class="footer-action-btn" id="repeat-btn" title="单曲循环">
@@ -811,6 +834,10 @@
       var volumePlayed = document.getElementById('volume-played');
       var volumeDot = document.getElementById('volume-dot');
       var volumeText = document.getElementById('volume-text');
+      var toggleVolumeBtn = document.getElementById('toggle-volume-btn');
+      var volumePopover = document.getElementById('volume-popover');
+      var footerVolumeIcon = document.getElementById('footer-volume-icon');
+      var volumeTimer = null;
 
       var isLoop = false;
       var isLiked = false;
@@ -997,9 +1024,15 @@
         if (vol <= 0.01) {
           volumeIconHigh.style.display = 'none';
           volumeIconMute.style.display = 'block';
+          if (footerVolumeIcon) {
+            footerVolumeIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+          }
         } else {
           volumeIconHigh.style.display = 'block';
           volumeIconMute.style.display = 'none';
+          if (footerVolumeIcon) {
+            footerVolumeIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+          }
           lastVolume = vol;
         }
         if (save) {
@@ -1009,11 +1042,49 @@
 
       applyVolume(currentVolume, false);
 
+      function showVolumePopover() {
+        if (!volumePopover) return;
+        volumePopover.classList.add('active');
+        toggleVolumeBtn.classList.add('active');
+        clearTimeout(volumeTimer);
+        volumeTimer = setTimeout(function() {
+          hideVolumePopover();
+        }, 6000);
+      }
+
+      function hideVolumePopover() {
+        if (!volumePopover) return;
+        volumePopover.classList.remove('active');
+        toggleVolumeBtn.classList.remove('active');
+        clearTimeout(volumeTimer);
+      }
+
+      toggleVolumeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (volumePopover.classList.contains('active')) {
+          hideVolumePopover();
+        } else {
+          showVolumePopover();
+        }
+      });
+
+      volumePopover.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showVolumePopover();
+      });
+
+      document.addEventListener('click', function(e) {
+        if (volumePopover && !volumePopover.contains(e.target) && e.target !== toggleVolumeBtn) {
+          hideVolumePopover();
+        }
+      });
+
       function handleVolumeSeek(e) {
         var rect = volumeBar.getBoundingClientRect();
         var clientX = e.touches ? e.touches[0].clientX : e.clientX;
         var pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         applyVolume(pos, true);
+        showVolumePopover();
       }
 
       volumeBarWrap.addEventListener('click', handleVolumeSeek);
@@ -1028,13 +1099,15 @@
         isDraggingVolume = false;
       });
 
-      volumeMuteBtn.addEventListener('click', function() {
+      volumeMuteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
         if (currentVolume > 0.01) {
           lastVolume = currentVolume;
           applyVolume(0, true);
         } else {
           applyVolume(lastVolume > 0.05 ? lastVolume : 0.8, true);
         }
+        showVolumePopover();
       });
 
       // 7. 播放进度与歌词高亮滚动
