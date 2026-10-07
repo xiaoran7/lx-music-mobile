@@ -53,6 +53,8 @@ def init_db():
             duration INTEGER DEFAULT 0,
             source TEXT,
             songmid TEXT,
+            raw_audio_url TEXT,
+            raw_pic_url TEXT,
             has_audio BOOLEAN DEFAULT 0,
             has_cover BOOLEAN DEFAULT 0,
             has_lrc BOOLEAN DEFAULT 0,
@@ -62,6 +64,15 @@ def init_db():
             view_count INTEGER DEFAULT 0
         )
     """)
+    # 自动增补字段（兼容已有数据库）
+    try:
+        cur.execute("ALTER TABLE shares ADD COLUMN raw_audio_url TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cur.execute("ALTER TABLE shares ADD COLUMN raw_pic_url TEXT")
+    except sqlite3.OperationalError:
+        pass
     cur.execute("CREATE INDEX IF NOT EXISTS idx_expire_at ON shares(expire_at)")
     conn.commit()
     conn.close()
@@ -80,32 +91,39 @@ def generate_short_code(length: int = 6) -> str:
 
 
 async def download_file(url: str, dest_path: Path, max_bytes: int = MAX_AUDIO_SIZE_BYTES) -> bool:
-    """安全流式下载外部文件，带防盗链伪装与大小限制"""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "*/*",
-    }
-    try:
-        timeout = aiohttp.ClientTimeout(total=60)
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(url, headers=headers) as resp:
-                if resp.status != 200:
-                    logger.warning(f"下载失败 {url}，状态码: {resp.status}")
-                    return False
-                downloaded = 0
-                async with aiofiles.open(dest_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(64 * 1024):
-                        downloaded += len(chunk)
-                        if downloaded > max_bytes:
-                            logger.warning(f"文件超过大小限制 {max_bytes} 字节，下载终止")
-                            return False
-                        await f.write(chunk)
-                return True
-    except Exception as e:
-        logger.error(f"下载异常 {url}: {e}")
-        if dest_path.exists():
-            dest_path.unlink(missing_ok=True)
-        return False
+    """安全流式下载外部文件，带多环境防盗链伪装与大小限制"""
+    user_agents = [
+        "okhttp/3.12.12",
+        "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    ]
+    for ua in user_agents:
+        headers = {
+            "User-Agent": ua,
+            "Accept": "*/*",
+            "Range": "bytes=0-",
+        }
+        try:
+            timeout = aiohttp.ClientTimeout(total=45)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(url, headers=headers) as resp:
+                    if resp.status not in (200, 206):
+                        logger.warning(f"下载尝试失败 [UA={ua[:15]}] {url}，状态码: {resp.status}")
+                        continue
+                    downloaded = 0
+                    async with aiofiles.open(dest_path, "wb") as f:
+                        async for chunk in resp.content.iter_chunked(64 * 1024):
+                            downloaded += len(chunk)
+                            if downloaded > max_bytes:
+                                logger.warning(f"文件超过大小限制 {max_bytes} 字节，下载终止")
+                                return False
+                            await f.write(chunk)
+                    return True
+        except Exception as e:
+            logger.error(f"下载异常 {url}: {e}")
+            if dest_path.exists():
+                dest_path.unlink(missing_ok=True)
+    return False
 
 
 async def process_media_persistence(code: str, audio_url: Optional[str], pic_url: Optional[str], lrc_text: Optional[str]):
@@ -228,10 +246,10 @@ async def create_share(req: ShareRequest, background_tasks: BackgroundTasks, x_s
 
     cur.execute(
         """
-        INSERT INTO shares (code, title, singer, album, duration, source, songmid, created_at, expire_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO shares (code, title, singer, album, duration, source, songmid, raw_audio_url, raw_pic_url, created_at, expire_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
-        (code, req.title, req.singer, req.album or "", req.duration or 0, req.source or "", req.songmid or "", now, expire_at),
+        (code, req.title, req.singer, req.album or "", req.duration or 0, req.source or "", req.songmid or "", req.audioUrl or "", req.picUrl or "", now, expire_at),
     )
     conn.commit()
     conn.close()
@@ -306,8 +324,8 @@ async def share_page(code: str, request: Request):
             "album": row["album"] or "",
             "duration": row["duration"] or 0,
             "expire_str": expire_str,
-            "audio_url": f"/media/{code}/audio",
-            "cover_url": f"/media/{code}/cover" if row["has_cover"] else "",
+            "audio_url": f"/media/{code}/audio" if row["has_audio"] else (row["raw_audio_url"] or f"/media/{code}/audio"),
+            "cover_url": f"/media/{code}/cover" if row["has_cover"] else (row["raw_pic_url"] or ""),
             "lrc_url": f"/media/{code}/lrc" if row["has_lrc"] else "",
         },
     )
@@ -315,25 +333,42 @@ async def share_page(code: str, request: Request):
 
 @app.get("/media/{code}/audio")
 async def get_media_audio(code: str):
-    """音频分发保底接口（通常 Nginx 会优先直出静态文件）"""
+    """音频分发保底接口（本地已转存则直接 206 分片直出，未完成则重定向至原始直链）"""
     audio_path = MEDIA_DIR / code / "audio.mp3"
-    if not audio_path.exists():
-        raise HTTPException(status_code=404, detail="音频仍在缓存或不存在")
-    return FileResponse(
-        str(audio_path),
-        media_type="audio/mpeg",
-        filename=f"{code}.mp3",
-        headers={"Accept-Ranges": "bytes", "Cache-Control": "public, max-age=86400"},
-    )
+    if audio_path.exists():
+        return FileResponse(
+            str(audio_path),
+            media_type="audio/mpeg",
+            filename=f"{code}.mp3",
+            headers={"Accept-Ranges": "bytes", "Cache-Control": "public, max-age=86400"},
+        )
+    # 本地文件不存在时，检查数据库并重定向至原始直链
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT raw_audio_url FROM shares WHERE code = ?", (code,))
+    r = cur.fetchone()
+    conn.close()
+    if r and r["raw_audio_url"]:
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(url=r["raw_audio_url"], status_code=302)
+    raise HTTPException(status_code=404, detail="音频仍在缓存或不存在")
 
 
 @app.get("/media/{code}/cover")
 async def get_media_cover(code: str):
-    """封面图片接口"""
+    """封面图片接口（本地不存在时重定向至原始图片地址）"""
     cover_path = MEDIA_DIR / code / "cover.jpg"
-    if not cover_path.exists():
-        raise HTTPException(status_code=404, detail="封面图不存在")
-    return FileResponse(str(cover_path), media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800"})
+    if cover_path.exists():
+        return FileResponse(str(cover_path), media_type="image/jpeg", headers={"Cache-Control": "public, max-age=604800"})
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT raw_pic_url FROM shares WHERE code = ?", (code,))
+    r = cur.fetchone()
+    conn.close()
+    if r and r["raw_pic_url"]:
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(url=r["raw_pic_url"], status_code=302)
+    raise HTTPException(status_code=404, detail="封面图不存在")
 
 
 @app.get("/media/{code}/lrc")
