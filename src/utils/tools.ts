@@ -351,6 +351,10 @@ export const shareToCustomServer = async(musicInfo: LX.Music.MusicInfo, customTt
     console.warn('获取音频直链失败', e)
   }
 
+  if (!audioUrl) {
+    throw new Error(global.i18n.t('share_custom_server_no_audio'))
+  }
+
   let picUrl = ''
   try {
     picUrl = await getPicPath({ musicInfo })

@@ -404,6 +404,7 @@
   "share_custom_server_success": "分享連結已複製到剪貼簿！",
   "share_custom_server_success_ttl": "已複製分享連結 ({days}天有效)！",
   "share_custom_server_fail": "生成分享連結失敗：{msg}",
+  "share_custom_server_no_audio": "獲取歌曲播放直鏈失敗（該歌曲可能暫無音源或需配置自定義音源），無法生成播放單頁",
   "share_modal_title": "分享音樂至私有雲",
   "share_modal_expire_label": "分享有效期限",
   "share_modal_generate_btn": "生成私有雲分享連結",

@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>{{ title ~ ' - ' ~ singer if status == 'valid' else '音乐分享 - TannerLab' }}</title>
   <meta name="description" content="由 LX Music 分享的专属音乐单页">
+  {% if status == 'valid' %}
+  <!-- OpenGraph 社交卡片（微信、QQ、社交平台优化） -->
+  <meta property="og:type" content="music.song">
+  <meta property="og:title" content="{{ title }} - {{ singer }}">
+  <meta property="og:description" content="由洛雪音乐分享，点击免客户端即可在线试听。">
+  <meta property="og:image" content="{{ cover_url }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title }} - {{ singer }}">
+  <meta name="twitter:image" content="{{ cover_url }}">
+  {% endif %}
   <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.css">
   <style>
     :root {
@@ -109,6 +119,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .disc-box:active {
+      transform: scale(0.96);
     }
     .disc-img {
       width: 100%;
@@ -130,6 +146,7 @@
       border: 4px solid #1e293b;
       border-radius: 50%;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+      pointer-events: none;
     }
     @keyframes rotate-disc {
       from { transform: rotate(0deg); }
@@ -194,6 +211,16 @@
       margin-top: 14px;
       opacity: 0.85;
     }
+    .audio-error-tip {
+      display: none;
+      font-size: 12px;
+      color: #ef4444;
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 8px;
+      line-height: 1.5;
+    }
     /* 错误与失效状态 */
     .error-icon {
       width: 64px;
@@ -230,7 +257,7 @@
   <div class="container">
     {% if status == 'valid' %}
       <div class="card">
-        <div class="disc-box">
+        <div id="disc-box" class="disc-box" title="点击播放/暂停">
           <img id="disc-img" class="disc-img" src="{{ cover_url }}" alt="{{ title }}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'100\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'1\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><circle cx=\'12\' cy=\'12\' r=\'3\'/></svg>'">
           <div class="disc-center"></div>
         </div>
@@ -243,7 +270,8 @@
         </div>
 
         <div id="aplayer"></div>
-        <div class="play-tip">点击播放器按钮开始试听，支持歌词随动</div>
+        <div id="audio-error-tip" class="audio-error-tip">播放出现异常：音频源加载失败或防盗链超时，建议返回客户端刷新重试。</div>
+        <div class="play-tip">点击封面或播放器按钮开始试听，支持歌词随动</div>
       </div>
     {% else %}
       <div class="card">
@@ -264,7 +292,9 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/aplayer/1.10.1/APlayer.min.js"></script>
   <script>
     (function() {
+      var discBox = document.getElementById('disc-box');
       var discImg = document.getElementById('disc-img');
+      var errorTip = document.getElementById('audio-error-tip');
       var ap = new APlayer({
         container: document.getElementById('aplayer'),
         lrcType: {% if lrc_url %}3{% else %}0{% endif %},
@@ -280,14 +310,25 @@
         }]
       });
 
+      if (discBox) {
+        discBox.addEventListener('click', function() {
+          ap.toggle();
+        });
+      }
+
       ap.on('play', function() {
         if (discImg) discImg.classList.add('playing');
+        if (errorTip) errorTip.style.display = 'none';
       });
       ap.on('pause', function() {
         if (discImg) discImg.classList.remove('playing');
       });
       ap.on('ended', function() {
         if (discImg) discImg.classList.remove('playing');
+      });
+      ap.on('error', function() {
+        if (discImg) discImg.classList.remove('playing');
+        if (errorTip) errorTip.style.display = 'block';
       });
     })();
   </script>
