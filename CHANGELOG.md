@@ -1,5 +1,10 @@
 # lx-music-mobile change log
 
+## 2026-10-07 — 重构关于页面与软件更新通道
+
+- 关于页面升级：致敬首创原作者 lyswhut 并保留官方文档指引，全面引入“落雪全家桶 (LX Music Suite)”生态矩阵（Desktop / Mobile / Sync Server / Share Server）组件架构与本分支开源主页。
+- 软件更新通道升级：将 `utils/version.js` 的版本检测与 APK 下载地址切换至本分支 `xiaoran7/lx-music-mobile`，清理上游失效的第三方镜像源，并在 `core/version.ts` 中恢复完整版本比对与更新提示链路。
+
 ## 2026-10-07 — 重构开源发布文档与生产环境配置脱敏
 
 - 重构 `README.md`：致敬原作者 lyswhut，系统梳理“落雪全家桶”（Desktop、Mobile、Sync Server、Share Server）生态架构与移动端特色。
