@@ -178,12 +178,12 @@
     }
     /* 封面大卡片（1:1 正方形、大阴影、圆角、原生翻页淡入淡出动效） */
     .cover-box {
-      width: min(74vw, 36vh);
-      height: min(74vw, 36vh);
-      max-width: 300px;
-      max-height: 300px;
+      width: min(84vw, 42vh);
+      height: min(84vw, 42vh);
+      max-width: 340px;
+      max-height: 340px;
       aspect-ratio: 1 / 1;
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: var(--shadow-cover);
       overflow: hidden;
       position: absolute;
@@ -260,13 +260,15 @@
       text-shadow: 0 2px 12px rgba(7, 193, 96, 0.25);
     }
 
-    /* 3. 底部播放控制区 */
+    /* 3. 底部播放控制区（紧凑自洽结构，为音量气泡提供绝对锚点） */
     .bottom-controller {
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding-top: 10px;
+      gap: 10px;
+      padding-top: 4px;
+      position: relative;
+      flex-shrink: 0;
     }
 
     /* 进度条与时间 */
@@ -274,7 +276,7 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
     .progress-bar {
       width: 100%;
@@ -315,27 +317,30 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* 音量微调浮层气泡（点击底栏 🔊 优雅展开，平时隐藏不占空间，彻底告别双条冲突） */
+    /* 音量微调浮层气泡（点击底栏 🔊 悬浮在底栏上方弹出，绝对定位绝不挤占控制区常规文档流） */
     .volume-popover {
-      width: calc(100% - 24px);
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 50px;
       max-width: 320px;
-      margin: 0 auto 8px;
+      margin: 0 auto;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
-      border-radius: 20px;
-      padding: 7px 14px;
-      display: flex;
+      box-shadow: 0 14px 36px -4px rgba(0, 0, 0, 0.22), 0 4px 14px -2px rgba(0, 0, 0, 0.08);
+      border-radius: 24px;
+      padding: 8px 16px;
+      display: none;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       opacity: 0;
-      transform: translateY(8px) scale(0.96);
+      transform: translateY(12px) scale(0.94);
       pointer-events: none;
-      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-      position: relative;
-      z-index: 20;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      z-index: 50;
     }
     .volume-popover.active {
+      display: flex;
       opacity: 1;
       transform: translateY(0) scale(1);
       pointer-events: auto;
@@ -417,8 +422,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 40px;
-      margin: 10px 0 14px;
+      gap: 36px;
+      margin: 4px 0 8px;
     }
     .control-btn {
       background: none;
