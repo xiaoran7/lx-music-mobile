@@ -346,6 +346,15 @@ async def share_page(code: str, request: Request):
         else:
             expire_str = f"剩余有效约 {remaining_hours} 小时"
 
+    lrc_text = ""
+    if row["has_lrc"]:
+        lrc_file = MEDIA_DIR / code / "lyric.lrc"
+        if lrc_file.exists():
+            try:
+                lrc_text = lrc_file.read_text(encoding="utf-8")
+            except Exception as e:
+                logger.warning(f"读取本地歌词失败: {e}")
+
     return templates.TemplateResponse(
         request=request,
         name="player.html",
@@ -360,6 +369,7 @@ async def share_page(code: str, request: Request):
             "audio_url": f"/media/{code}/audio.mp3" if row["has_audio"] else (row["raw_audio_url"] or f"/media/{code}/audio.mp3"),
             "cover_url": f"/media/{code}/cover.jpg" if row["has_cover"] else (row["raw_pic_url"] or ""),
             "lrc_url": f"/media/{code}/lyric.lrc" if row["has_lrc"] else "",
+            "lrc_text": lrc_text,
             "comments": comments,
         },
     )
