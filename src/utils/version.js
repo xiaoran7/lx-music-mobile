@@ -71,48 +71,62 @@ export const getVersionInfo = async(index = 0) => {
   })
 }
 
-const getTargetAbi = async() => {
+export const getTargetAbi = async() => {
   const supportedAbis = await getSupportedAbis()
   for (const abi of abis) {
     if (supportedAbis.includes(abi)) return abi
   }
   return abis[abis.length - 1]
 }
+
+export const getApkDownloadUrl = async(version) => {
+  const abi = await getTargetAbi()
+  return `https://github.com/${repoOwner}/${repoName}/releases/download/v${version}/${name}-v${version}-${abi}.apk`
+}
+
 let downloadJobId = null
 const noop = (total, download) => {}
 let apkSavePath
 
 export const downloadNewVersion = async(version, onDownload = noop) => {
   const abi = await getTargetAbi()
-  const url = `https://github.com/${repoOwner}/${repoName}/releases/download/v${version}/${name}-v${version}-${abi}.apk`
-  let savePath = temporaryDirectoryPath + '/lx-music-mobile.apk'
+  const rawUrl = `https://github.com/${repoOwner}/${repoName}/releases/download/v${version}/${name}-v${version}-${abi}.apk`
 
+  // 镜像加速候选列表：首选高可用公共镜像，自动回退官方源
+  const downloadCandidates = [
+    `https://ghproxy.net/${rawUrl}`,
+    `https://gh-proxy.com/${rawUrl}`,
+    rawUrl,
+  ]
+
+  let savePath = temporaryDirectoryPath + '/lx-music-mobile.apk'
   if (downloadJobId) stopDownload(downloadJobId)
 
-  const { jobId, promise } = downloadFile(url, savePath, {
-    progressInterval: 500,
-    connectionTimeout: 20000,
-    readTimeout: 30000,
-    begin({ statusCode, contentLength }) {
-      onDownload(contentLength, 0)
-      // switch (statusCode) {
-      //   case 200:
-      //   case 206:
-      //     break
-      //   default:
-      //     onDownload(null, contentLength, 0)
-      //     break
-      // }
-    },
-    progress({ contentLength, bytesWritten }) {
-      onDownload(contentLength, bytesWritten)
-    },
-  })
-  downloadJobId = jobId
-  return promise.then(() => {
-    apkSavePath = savePath
-    return updateApp()
-  })
+  let lastError = null
+  for (const targetUrl of downloadCandidates) {
+    try {
+      const { jobId, promise } = downloadFile(targetUrl, savePath, {
+        progressInterval: 500,
+        connectionTimeout: 15000,
+        readTimeout: 30000,
+        begin({ statusCode, contentLength }) {
+          onDownload(contentLength, 0)
+        },
+        progress({ contentLength, bytesWritten }) {
+          onDownload(contentLength, bytesWritten)
+        },
+      })
+      downloadJobId = jobId
+      await promise
+      apkSavePath = savePath
+      return updateApp()
+    } catch (err) {
+      lastError = err
+      // 当前源失败，循环尝试下一个镜像源
+    }
+  }
+
+  throw lastError || new Error('All download sources failed')
 }
 
 export const updateApp = async() => {
