@@ -1,5 +1,9 @@
 # lx-music-mobile change log
 
+## 2026-10-08 — README 增加自定义音源推荐链接
+
+- **README 文档补充**：在 README “致敬原作者与开源致谢”模块中新增六音自定义音源仓库推荐链接（`https://github.com/pdone/lx-music-source`），便于用户快速配置音源解析脚本。
+
 ## 2026-10-08 — 优化分享歌曲复制链接格式
 
 - **分享剪贴板内容优化**：在 `ShareModal.tsx` 与 `src/utils/tools.ts` 中将分享复制逻辑从单纯 URL 升级为标准“歌名+歌手+链接”格式（`歌名 - 歌手\n分享链接`），与系统分享保持体验一致。
