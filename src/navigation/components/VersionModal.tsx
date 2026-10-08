@@ -4,8 +4,8 @@ import { View, ScrollView } from 'react-native'
 import { compareVer, sizeFormate } from '@/utils'
 
 import Button from '@/components/common/Button'
-import { updateApp } from '@/utils/version'
-import { createStyle } from '@/utils/tools'
+import { updateApp, getApkDownloadUrl } from '@/utils/version'
+import { createStyle, openUrl, clipboardWriteText, toast } from '@/utils/tools'
 import { useTheme } from '@/store/theme/hook'
 import { type VersionInfo } from '@/store/version/state'
 import Text from '@/components/common/Text'
@@ -173,10 +173,59 @@ const VersionModal = ({ componentId }: { componentId: string }) => {
     }
   }
 
+  const handleOpenBrowser = async() => {
+    try {
+      if (versionInfo.newVersion?.version) {
+        const rawUrl = await getApkDownloadUrl(versionInfo.newVersion.version)
+        const targetUrl = `https://ghproxy.net/${rawUrl}`
+        void openUrl(targetUrl)
+      } else {
+        void openUrl('https://github.com/xiaoran7/lx-music-mobile/releases')
+      }
+    } catch {
+      void openUrl('https://github.com/xiaoran7/lx-music-mobile/releases')
+    }
+  }
+
+  const handleCopyLink = async() => {
+    try {
+      if (versionInfo.newVersion?.version) {
+        const rawUrl = await getApkDownloadUrl(versionInfo.newVersion.version)
+        const targetUrl = `https://ghproxy.net/${rawUrl}`
+        clipboardWriteText(targetUrl)
+        toast('下载直链已复制到剪贴板')
+      } else {
+        clipboardWriteText('https://github.com/xiaoran7/lx-music-mobile/releases')
+        toast('Release 页面已复制到剪贴板')
+      }
+    } catch {
+      clipboardWriteText('https://github.com/xiaoran7/lx-music-mobile/releases')
+      toast('Release 页面已复制到剪贴板')
+    }
+  }
+
+  const showBrowserFallback = versionInfo.status == 'error' || versionInfo.isUnknown || versionInfo.status == 'downloading'
+
   return (
     <ModalContent>
       <Content title={title} newVersionInfo={versionInfo.newVersion} />
       { tip.length ? <Text style={styles.tip} color={theme['c-primary-font']}>{tip}</Text> : null }
+
+      {
+        showBrowserFallback
+          ? (
+              <View style={styles.fallbackRow}>
+                <Button style={{ ...styles.fallbackBtn, backgroundColor: theme['c-button-background'] }} onPress={handleOpenBrowser}>
+                  <Text size={12} color={theme['c-primary-font']}>🌐 浏览器高速下载</Text>
+                </Button>
+                <Button style={{ ...styles.fallbackBtn, backgroundColor: theme['c-button-background'] }} onPress={handleCopyLink}>
+                  <Text size={12} color={theme['c-primary-font']}>📋 复制直链</Text>
+                </Button>
+              </View>
+            )
+          : null
+      }
+
       <View style={styles.btns}>
         {
           ignoreBtn.show
@@ -246,6 +295,23 @@ const styles = createStyle({
     paddingBottom: 15,
     paddingLeft: 15,
     // paddingRight: 15,
+  },
+  fallbackRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingBottom: 12,
+  },
+  fallbackBtn: {
+    flex: 1,
+    paddingTop: 8,
+    paddingBottom: 8,
+    alignItems: 'center',
+    borderRadius: 4,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(128, 128, 128, 0.2)',
   },
   btn: {
     flex: 1,

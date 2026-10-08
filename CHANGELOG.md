@@ -1,5 +1,10 @@
 # lx-music-mobile change log
 
+## 2026-10-08 — 软件更新体验与下载通道全面重构
+
+- **国内多轨镜像加速下载**：重构 `src/utils/version.js`，APK 下载链路引入 `ghproxy.net` 与 `gh-proxy.com` 高可用镜像通道，首选镜像代理加速并在网络波动时自动回退官方源，彻底根治国内直连 GitHub 下载慢或卡死中断的问题。
+- **更新弹窗增设逃生通道**：在 `src/navigation/components/VersionModal.tsx` 中新增【🌐 浏览器高速下载】与【📋 复制直链】快捷按钮。当应用内下载受阻或失败时，用户可一键调用系统浏览器多线程接管下载或复制加速直链，避免被卡死在弹窗中。
+
 ## 2026-10-07 — 重构关于页面与软件更新通道
 
 - 关于页面升级：致敬首创原作者 lyswhut 并保留官方文档指引，全面引入“落雪全家桶 (LX Music Suite)”生态矩阵（Desktop / Mobile / Sync Server / Share Server）组件架构与本分支开源主页。
