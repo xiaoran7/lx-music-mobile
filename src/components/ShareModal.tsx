@@ -56,7 +56,9 @@ export default forwardRef<ShareModalType, {}>((props, ref) => {
 
   const handleCopy = () => {
     if (!shareUrl) return
-    clipboardWriteText(shareUrl)
+    const title = musicInfo ? `${musicInfo.name}${musicInfo.singer ? ` - ${musicInfo.singer}` : ''}` : ''
+    const text = title ? `${title}\n${shareUrl}` : shareUrl
+    clipboardWriteText(text)
     const tip = ttlDays > 0
       ? t('share_custom_server_success_ttl', { days: ttlDays })
       : t('share_custom_server_success')

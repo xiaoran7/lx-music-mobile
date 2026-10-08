@@ -423,7 +423,14 @@ export const shareMusic = (shareType: LX.ShareType, downloadFileName: LX.AppSett
       toast(global.i18n.t('copy_name_tip'))
       break
     case 'custom_server':
-      void shareToCustomServer(musicInfo)
+      void shareToCustomServer(musicInfo).then((url) => {
+        const title = musicInfo ? `${musicInfo.name}${musicInfo.singer ? ` - ${musicInfo.singer}` : ''}` : ''
+        const text = title ? `${title}\n${url}` : url
+        clipboardWriteText(text)
+        toast(global.i18n.t('share_custom_server_success'))
+      }).catch(err => {
+        toast(global.i18n.t('share_custom_server_fail', { msg: err.message || String(err) }))
+      })
       break
   }
 }
