@@ -3,3 +3,8 @@
 # (the Windows default) that would otherwise mark the whole tree stale.
 # Binaries are auto-detected and left untouched.
 * text=auto eol=lf
+
+# GitHub Linguist 统计过滤（忽略服务端副产品与第三方杂项，让移动端保持专注核心语言）
+server/** linguist-vendored
+android/app/src/main/assets/** linguist-vendored
+ios/** linguist-vendored

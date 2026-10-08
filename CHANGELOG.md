@@ -1,5 +1,9 @@
 # lx-music-mobile change log
 
+## 2026-10-08 — 配置 GitHub Linguist 语言统计过滤
+
+- **代码语言统计净化**：配置 `.gitattributes`，将辅助性质的 `server/` 服务端模块、历史残留 `ios/` 目录以及内置资源标记为 `linguist-vendored`，过滤掉 Python、HTML 与 Objective-C 杂项，聚焦 React Native / TypeScript / Java 核心开发语言展示。
+
 ## 2026-10-08 — README 增加自定义音源推荐链接
 
 - **README 文档补充**：在 README “致敬原作者与开源致谢”模块中新增六音自定义音源仓库推荐链接（`https://github.com/pdone/lx-music-source`），便于用户快速配置音源解析脚本。
