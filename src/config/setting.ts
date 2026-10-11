@@ -5,6 +5,7 @@ import migrateSetting from './migrateSetting'
 import settingState from '@/store/setting/state'
 import { migrateMetaData, migrateListData } from './migrate'
 import { exitApp, tipDialog } from '@/utils/tools'
+import { compareVer } from '@/utils'
 
 // 业务相关工具方法
 
@@ -107,6 +108,10 @@ export const initSetting = async() => {
   if (setting) {
     if (!setting['common.shareType'] || (setting['common.shareType'] as any) === 'system') {
       setting['common.shareType'] = 'custom_server'
+    }
+    // 兼容性平滑升级：旧版本 (v2.0 及更早) 默认开启了音频硬件卸载（Audio Offload），在 Android 14+ / vivo OriginOS 等新设备上易触发 AudioTrack write failed: -6 死循环导致歌曲无限缓冲，迁移时统一重置为关闭
+    if (!setting.version || compareVer(setting.version, '2.1') < 0) {
+      setting['player.isEnableAudioOffload'] = false
     }
   }
 

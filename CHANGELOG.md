@@ -1,5 +1,11 @@
 # lx-music-mobile change log
 
+## 2026-10-11 — 默认关闭音频硬件卸载（Audio Offload）并实现平滑迁移，根治新系统播放无限缓冲
+
+- **根治 Android 14+ / 新机型播放死循环卡死**：排查并修复在较新 Android 系统（如 vivo OriginOS、小米澎湃OS）下歌曲能正常解析却卡在 `00:00` 无限缓冲（"缓冲中..."）的严重缺陷。底层原因是 ExoPlayer 默认开启了硬件音频卸载（`AUDIO_OUTPUT_FLAG_COMPRESS_OFFLOAD`），部分机型 AudioFlinger HAL 驱动报错 `AudioTrack write failed: -6 (DEAD_OBJECT)`，导致播放器陷入可恢复渲染死循环。
+- **默认配置与平滑升级适配**：在 `defaultSetting.ts` 中将 `player.isEnableAudioOffload` 默认值调整为 `false`，升级配置版本至 `2.1`；并在 `setting.ts` 中增设版本平滑迁移逻辑，旧版用户升级时自动将该项纠正为关闭，无需用户手动进设置排查。
+- **多语言与交互文案优化**：全面更新简体中文、繁体中文与英文多语言文案，明确“音频硬件卸载”的技术原理与新系统兼容风险，优化设置组件内部代码逻辑。
+
 ## 2026-10-08 — 配置 GitHub Linguist 语言统计过滤
 
 - **代码语言统计净化**：配置 `.gitattributes`，将辅助性质的 `server/` 服务端模块、历史残留 `ios/` 目录以及内置资源标记为 `linguist-vendored`，过滤掉 Python、HTML 与 Objective-C 杂项，聚焦 React Native / TypeScript / Java 核心开发语言展示。

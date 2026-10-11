@@ -11,7 +11,7 @@ import CheckBoxItem from '../../components/CheckBoxItem'
 export default memo(() => {
   const t = useI18n()
   const isEnableAudioOffload = useSettingValue('player.isEnableAudioOffload')
-  const setHandleAudioFocus = (isEnableAudioOffload: boolean) => {
+  const setEnableAudioOffload = (isEnableAudioOffload: boolean) => {
     updateSetting({ 'player.isEnableAudioOffload': isEnableAudioOffload })
     toast(t('setting_play_handle_audio_focus_tip'))
   }
@@ -20,7 +20,7 @@ export default memo(() => {
     <View style={styles.content}>
       <CheckBoxItem
         check={isEnableAudioOffload}
-        onChange={setHandleAudioFocus}
+        onChange={setEnableAudioOffload}
         helpDesc={t('setting_play_audio_offload_tip')}
         label={t('setting_play_audio_offload')}
       />
